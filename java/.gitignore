@@ -1,0 +1,5 @@
+#All java's gitignore files
+
+/.classpath
+/.project
+/target
