@@ -1,2 +1,5 @@
 #Emacs junk files
 *~
+.idea
+target
+.DS_Store

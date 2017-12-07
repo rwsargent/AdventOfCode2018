@@ -1,0 +1,13 @@
+find sqrt and mod of input number
+the perfect square completes a square grid, moves to index is at the end of a square is always N - 1
+to find from a given number, move backwards along grid position subtracting 1 until you find
+"center" position (the grid position DIRECTLY over/under/left/right of the index), then add 1 each
+increment until then end.
+
+should only ever have to traverse within 1 increment of a squared number
+how do i keep track of when the "center" is found?
+	- another matrix
+	- center is always some row_size/constant?
+
+
+
