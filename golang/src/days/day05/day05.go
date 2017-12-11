@@ -9,7 +9,7 @@ import (
 func main() {
 //	steps := SolveFirst(getInstructions("day05_input.txt"))
 	//	fmt.Println("Part one steps: ", steps)
-	steps := SolveSecond(getInstructions("day05_input.txt"))
+	steps := SolveSecond(getInstructions("src/days/day05/day05_input.txt"))
 	fmt.Println("Part two steps: ", steps)
 }
 
@@ -58,3 +58,5 @@ func getInstructions(path string) []int {
 
 	return instructions
 }
+
+
