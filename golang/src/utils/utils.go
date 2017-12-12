@@ -8,6 +8,7 @@ import (
 	"errors"
 	"strings"
 	"strconv"
+	"math"
 )
 
 func ReadInput(filename string) ([]string, error) {
@@ -55,4 +56,29 @@ func StringsToInts(numbers []string) []int {
 	}
 
 	return ints
+}
+
+
+func MaxValueAndIdx(slice []int) (int, int) {
+	var max int = math.MinInt32
+	var maxIdx int = -1;
+	for idx, value := range slice {
+		if value > max {
+			max = value
+			maxIdx = idx
+		}
+	}
+	return max, maxIdx
+}
+
+func MinValueAndIdx(slice []int) (int, int) {
+	var min int = math.MinInt32
+	var minIdx int = -1;
+	for idx, value := range slice {
+		if value < min {
+			min = value
+			minIdx = idx
+		}
+	}
+	return min, minIdx
 }
