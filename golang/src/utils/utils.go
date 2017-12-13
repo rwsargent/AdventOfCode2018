@@ -34,7 +34,7 @@ func findFile(filename string) (*os.File, error) {
 	if(err == nil) {
 		return file, nil
 	}
-	gopaths := strings.Split(os.Getenv("GOPATH"), fmt.Sprintf("%b", os.PathListSeparator))
+	gopaths := strings.Split(os.Getenv("GOPATH"), string(os.PathListSeparator))
 	for _, gopath := range gopaths {
 		file, err = os.Open(path.Join(gopath, filename))
 		if(err == nil) {
@@ -57,7 +57,6 @@ func StringsToInts(numbers []string) []int {
 
 	return ints
 }
-
 
 func MaxValueAndIdx(slice []int) (int, int) {
 	var max int = math.MinInt32
