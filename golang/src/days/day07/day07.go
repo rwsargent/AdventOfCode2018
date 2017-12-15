@@ -16,7 +16,7 @@ type Program struct {
 	Weight int
 	Below []string
 }
-//qgcmjz (87) -> skzkx, pzkofch
+
 var Pattern = regexp.MustCompile(`([a-z]+) \((\d+)\)( -> (([a-z]+, )*[a-z]+))?`)
 
 func parseLine(line string ) Program {
@@ -35,4 +35,8 @@ func parseLine(line string ) Program {
 	}
 
 	return program
+}
+
+func buildGraph(filename string)  map[string]Program {
+	
 }
