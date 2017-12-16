@@ -79,3 +79,7 @@ func parseLine(line string ) Program {
 
 	return program
 }
+
+func buildGraph(filename string)  map[string]Program {
+	
+}
