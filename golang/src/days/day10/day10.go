@@ -4,16 +4,24 @@ import (
 	"fmt"
 	"utils"
 	"strings"
+	"utils/hash"
 )
 	
 func main() {
 	SolveFirst()
+	SolveSecond()
+}
+
+func SolveSecond() {
+	input := util.MustReadInput("inputs/day10.txt")[0]
+	out := hash.HashToString(hash.KnotHash(input))
+	fmt.Println("Hash: ", out)
 }
 
 func SolveFirst() {
 	lengths := parseInput("inputs/day10.txt")
 	list := makeList(256)
-	fmt.Println("Hash: ", hash(lengths, list))
+	fmt.Println("Hash: ", hasher(lengths, list))
 }
 
 func makeList(size int) []int{
@@ -24,15 +32,12 @@ func makeList(size int) []int{
 	return list
 }
 
-func hash(lengths []int, list []int) int {
+func hasher(lengths []int, list []int) int {
 	var current, skip int = 0, 0
 	for _, length := range lengths {
 		list = reverseSublist(list, current, length)
 		current = (current + length + skip) % len(list)
 		skip++
-		fmt.Println("list:" , list)
-		fmt.Println("current:" , current)
-		fmt.Println("skip:" , skip)
 	}
 
 	return list[0] * list[1]
