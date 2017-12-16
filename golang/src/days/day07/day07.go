@@ -1,14 +1,15 @@
 package main
 
 import (
-//	"fmt"
+	"fmt"
 	"regexp"
 	"strings"
 	"strconv"
+	"utils"
 )
 
 func main() {
-	
+	PartOne()
 }
 
 type Program struct {
@@ -16,8 +17,50 @@ type Program struct {
 	Weight int
 	Below []string
 }
-//qgcmjz (87) -> skzkx, pzkofch
+
 var Pattern = regexp.MustCompile(`([a-z]+) \((\d+)\)( -> (([a-z]+, )*[a-z]+))?`)
+
+func PartOne() {
+	programs := topProgram("inputs/day07.txt")
+	fmt.Println("Last remaining program: ")
+	fmt.Println(programs)	
+
+}
+
+func topProgram(filename string) map[string]Program {
+	programs := parseInput(filename)
+	for _, program := range programs {
+		for _, dep := range program.Below {
+			fmt.Printf("Before size: %d\n", len(programs))
+			remove(dep, programs)
+			fmt.Printf("After size: %d\n", len(programs))
+		}
+	}
+
+	return programs
+}
+
+func remove(name string, programs map[string]Program ) {
+	if _, ok := programs[name]; !ok {
+		return
+	}
+	for _, dependent := range programs[name].Below {
+		remove(dependent, programs)
+	}
+
+	delete(programs, name);
+}
+
+func parseInput(filename string) map[string]Program {
+	lines := util.MustReadInput(filename)
+	var programs = make(map[string]Program)
+	for _, line := range lines {
+		program := parseLine(line);
+		programs[program.Name] = program
+	}
+
+	return programs
+}
 
 func parseLine(line string ) Program {
 	groups := Pattern.FindStringSubmatch(line)

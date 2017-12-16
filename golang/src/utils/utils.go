@@ -11,6 +11,24 @@ import (
 	"math"
 )
 
+func MustReadInput(filename string) []string {
+	file, err := findFile(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if scanner.Err() != nil {
+		panic(scanner.Err())
+	}
+	return lines
+}
 func ReadInput(filename string) ([]string, error) {
 	file, err := findFile(filename)
 	if err != nil {
