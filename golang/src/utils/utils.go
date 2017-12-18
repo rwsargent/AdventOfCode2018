@@ -99,3 +99,20 @@ func MinValueAndIdx(slice []int) (int, int) {
 	}
 	return min, minIdx
 }
+
+func Abs(a int) int {
+	if a < 0 {
+		return -a
+	} else {
+		return a
+	}
+}
+
+
+func Sum(list *[]int) int {
+	var sum int
+	for _, el := range *list {
+		sum += el
+	}
+	return sum
+}

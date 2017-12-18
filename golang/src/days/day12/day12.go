@@ -42,7 +42,6 @@ func buildGraph(filename string) map[string]*Pipe {
 
 func sizeOfGraph(pipes map[string]*Pipe) int {
 	counter := 1
-	(*pipes["0"]).Visited = true
 	dfs((*pipes["0"]).Neighbors, pipes, &counter)
 	return counter
 }
