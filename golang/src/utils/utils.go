@@ -116,3 +116,11 @@ func Sum(list *[]int) int {
 	}
 	return sum
 }
+
+func MustAtoi(number string) int {
+	num, err := strconv.Atoi(strings.TrimSpace(number));
+	if(err != nil) {
+		panic(err)
+	}
+	return num
+}
