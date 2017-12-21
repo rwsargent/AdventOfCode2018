@@ -8,7 +8,7 @@ import (
 
 func TestExample(t *testing.T) {
 	var dancers = []string {"a", "b", "c", "d", "e"}
-	var moves = []string{"s1", "x3/4", "pe/b"}
+	var moves = []string{"s1", "x3hg/4", "pe/b"}
 
 	result := dance(moves, dancers)
 	var expected = []string{"b", "a", "e", "d", "c"}
