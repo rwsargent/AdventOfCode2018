@@ -1,11 +1,12 @@
 use std::env;
 use std::num;
 use std::cmp;
+use std::collections::HashMap;
 
 fn main() {
     let input = env::args().skip(1).next().unwrap().parse::<u64>().unwrap();
     println!("{}", spiral_dist(input));
-    println!("{}", get_ring(368078))
+    println!("id > input {}", find_id_whos_sum_is_greater_than(input));
 }
 
 /*
@@ -38,7 +39,85 @@ which ring are we in?
 42  21  22  23  24  25  26
 43  44  45  46  47  48  49
 
+
+36  35  34  33  32  31  30
+37  16  15  14  13  12  29
+38  17   4   3   2  11  28
+39  18   5   0   1  10  27
+40  19   6   7   8  9   26
+41  20  21  22  23  24  25
+42  43  44  45  46  47  48
+
 */
+
+fn find_id_whos_sum_is_greater_than(x: u64) -> u64 {
+    let mut map = HashMap::new();
+    #[derive(Debug)]
+    struct State {
+        coor: (i32, i32),
+        index: u64,
+        value: u64
+    }
+    let mut current = State { coor: (0, 0), index: 1, value: 1 };
+    map.insert(current.coor.clone(), current.value.clone());
+    #[derive(Debug)]
+    enum Direction {
+        Up,
+        Left,
+        Down,
+        Right
+    }
+    let mut dir = Direction::Right;
+    let mut leftBound = 0;
+    let mut rightBound = 0;
+    let mut topBound = 0;
+    let mut bottomBound = 0;
+    while current.value < x {
+        // set current to the next one and update direction and bounds if necessary
+        match dir {
+            Direction::Right => {
+                current.coor = (current.coor.0 + 1, current.coor.1);
+                if current.coor.0 > rightBound {
+                    rightBound += 1;
+                    dir = Direction::Up;
+                }
+            }
+            Direction::Up => {
+                current.coor = (current.coor.0, current.coor.1 + 1);
+                if current.coor.1 > topBound {
+                    topBound += 1;
+                    dir = Direction::Left;
+                }
+            }
+            Direction::Left => {
+                current.coor = (current.coor.0 - 1, current.coor.1);
+                if current.coor.0 < leftBound {
+                    leftBound -= 1;
+                    dir = Direction::Down;
+                }
+            }
+            Direction::Down => {
+                current.coor = (current.coor.0, current.coor.1 - 1);
+                if current.coor.1 < bottomBound {
+                    bottomBound -= 1;
+                    dir = Direction::Right;
+                }
+            }
+        }
+        let (xi, yi) = current.coor;
+        let mut value = 0;
+        for x in -1 .. 2 {
+            for y in -1 .. 2 {
+                value += map.get(&(xi + x, yi + y)).map(|x|*x).unwrap_or_default();
+            }
+        }
+        current.value = value;
+        current.index += 1;
+        map.insert(current.coor.clone(), current.value);
+    }
+    current.value
+}
+
 fn spiral_dist(x: u64) -> u64 {
     match get_ring(x) {
         1 => 0,
@@ -68,7 +147,7 @@ fn side_dist(position: u64, side_len: u64) -> u64 {
 
 fn get_ring(x: u64) -> u64 {
     let sqr = ((x - 1) as f64).sqrt() as u64;
-    if (sqr >> 1 << 1) == sqr {
+    if (sqr & 1) != 1 {
         // even ring, add one
         sqr + 1
     } else {
