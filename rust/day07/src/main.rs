@@ -45,35 +45,59 @@ impl Graph {
         let mut current = self.root;
         self.set_weights(current);
 
-        let mut last :usize = self.root;
+        let mut last: usize = self.root;
+        let mut peer_size: u64 = 0;
 
         let mut cont = true;
         while cont {
             let node = &self.nodes[current];
             let child_count = node.children.len();
-            assert!(child_count > 2);
+            assert!(child_count == 0 || child_count > 2);
             // find unbalanced one and set to current
-            let unbalanced_child = node.children.iter().map(|c|{
+            let histogram = node.children.iter().map(|c| {
                 (*c, self.nodes[*c].total_weight)
-            }).fold(HashMap::new(), |mut m, x|{
+            }).fold(HashMap::new(), |mut m, x| {
                 let v = m.remove(&x.1).unwrap_or_else(|| 0) + 1;
-                m.insert(x.0, v);
+                m.insert(x.1, v);
                 m
-            }).iter().find(|x| *x.1 == 1).unwrap();
-            current = *unbalanced_child.0
+            });
+            match histogram.iter()
+                .find(|x| *x.1 == 1) {
+                Some((unbalanced_weight, _)) => {
+                    current = *node.children.iter().find(|c|{
+                        self.nodes[**c].total_weight == *unbalanced_weight
+                    }).unwrap();
+                    peer_size = *histogram.iter().find(|x| *(*x).1 != 1).unwrap().0;
+                }
+                None => {
+                    cont = false
+                }
+            }
         }
 
+        let n = &self.nodes[current];
+        println!("peer: {}", peer_size);
+        println!("node: {:?}", (n.name.clone(), n.total_weight));
+        (n.name.clone(), n.weight + peer_size - n.total_weight)
     }
 
     fn set_weights<'a>(&'a mut self, idx: usize) {
-        let node = &self.nodes[idx as usize];
-        if node.total_weight < node.weight {
-            let child_weight: u64 = node.children.iter().map(|c| {
-                self.set_weights(*c);
-                self.nodes.index(*c).total_weight
-            }).sum();
+        let node = self.nodes[idx].clone();
+//        let children = self.nodes[idx].children.clone();
+        for c in node.children.iter() {
+            self.set_weights(*c);
+        }
 
-            self.nodes[idx as usize].total_weight = node.weight + child_weight;
+//        let node = &mut self.nodes[idx as usize];
+        if node.total_weight < node.weight {
+            let mut sum = 0;
+            for c in node.children {
+//            let child_weight: u64 = node.children.iter().map(|c| {
+//                self.set_weights(*c);
+                sum += self.nodes[c].total_weight
+            }
+
+            self.nodes[idx as usize].total_weight = node.weight + sum;
         }
     }
 }
