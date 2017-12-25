@@ -33,18 +33,19 @@ fn main() {
     let mut generator_a = Generator {
         previous: a_prev,
         factor: 16807,
+        multiple: 4,
     };
     let mut generator_b = Generator {
         previous: b_prev,
         factor: 48271,
+        multiple: 8,
     };
 
 
     let mask = (1 << 16) - 1;
     let mut value = 0;
     let mut i = 0;
-    while i < 40000000 {
-
+    while i < 5000000 {
         if (generator_a.generate() & mask) == (generator_b.generate() & mask) {
             value += 1;
         }
@@ -58,20 +59,27 @@ fn main() {
 struct Generator {
     previous: u64,
     factor: u64,
+    multiple: u64
 }
 
 impl Generator {
     fn generate(&mut self) -> u64 {
-        let next = (self.previous * self.factor) % 2147483647;
-        self.previous = next;
+        let mut next = 0;
+        loop {
+            next = (self.previous * self.factor) % 2147483647;
+            self.previous = next;
+            if (next % self.multiple) == 0 {
+                break;
+            }
+        }
         next
     }
 }
 
 #[test]
 fn test_generator() {
-    let mut genA = Generator { previous: 65, factor: 16807 };
-    let mut genB = Generator { previous: 8921, factor: 48271 };
+    let mut genA = Generator { previous: 65, factor: 16807, multiple: 1 };
+    let mut genB = Generator { previous: 8921, factor: 48271, multiple: 1 };
     assert_eq!(genA.generate(), 1092455);
     assert_eq!(genB.generate(), 430625591);
 
@@ -86,6 +94,4 @@ fn test_generator() {
 
     assert_eq!(genA.generate(), 1352636452);
     assert_eq!(genB.generate(), 285222916);
-
-
 }
