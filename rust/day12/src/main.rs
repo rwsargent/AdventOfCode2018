@@ -20,6 +20,7 @@ fn main() {
     let (mut g, id_map) = construct_graph(&contents);
 
     println!("0 node group size: {:?}", g.count_group_size(*id_map.get(&"0".to_string()).unwrap()));
+    println!("number of groups: {:?}", g.count_groups());
 }
 
 #[derive(Clone)]
@@ -37,19 +38,44 @@ struct Graph {
 }
 
 impl Graph {
-    fn count_group_size(&self, idx: usize) -> usize {
+    fn get_group(&self, idx: usize) -> HashSet<usize> {
         let mut visited = HashSet::new();
         let mut unvisited = vec![idx];
         while !unvisited.is_empty() {
             let next = unvisited.pop().unwrap();
             visited.insert(next);
-            self.nodes[next].children.iter().for_each(|c|{
+            self.nodes[next].children.iter().for_each(|c| {
                 if !visited.contains(c) {
                     unvisited.push(*c);
                 }
             });
         }
-        visited.len()
+        visited
+    }
+
+    fn count_group_size(&self, idx: usize) -> usize {
+        self.get_group(idx).len()
+    }
+
+    fn count_groups(&self) -> usize {
+        let mut groups: Vec<HashSet<usize>> = Vec::new();
+        for i in 0..self.nodes.len() {
+            let mut group_idx = 0;
+            let mut found = false;
+            while !found && group_idx < groups.len() {
+                let g = &groups[group_idx];
+                if g.contains(&i) {
+                    found = true;
+                } else {
+                    group_idx += 1;
+                }
+            }
+            if !found {
+                let group = self.get_group(i);
+                groups.push(group);
+            }
+        }
+        groups.len()
     }
 }
 
