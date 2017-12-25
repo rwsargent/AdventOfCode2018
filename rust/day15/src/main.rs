@@ -17,157 +17,75 @@ fn main() {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    let (mut g, _) = construct_graph(&contents);
+    let mut a_prev = 0;
+    let mut b_prev = 0;
 
-    println!("root node: {:?}", g.nodes[g.root].name);
-
-    let root = g.root;
-    g.set_weights(root);
-    println!("node to change: {:?}", g.find_unbalanced_child());
-}
-
-#[derive(Clone)]
-struct Node {
-    children: Vec<usize>,
-    name: String,
-    weight: u64,
-    total_weight: u64,
-    balanced: bool
-}
-
-struct Graph {
-    nodes: Vec<Node>,
-    root: usize
-}
-
-impl Graph {
-    pub fn find_unbalanced_child(&mut self) -> (String, u64) {
-        let mut current = self.root;
-        self.set_weights(current);
-
-        let mut last: usize = self.root;
-        let mut peer_size: u64 = 0;
-
-        let mut cont = true;
-        while cont {
-            let node = &self.nodes[current];
-            let child_count = node.children.len();
-            assert!(child_count == 0 || child_count > 2);
-            // find unbalanced one and set to current
-            let histogram = node.children.iter().map(|c| {
-                (*c, self.nodes[*c].total_weight)
-            }).fold(HashMap::new(), |mut m, x| {
-                let v = m.remove(&x.1).unwrap_or_else(|| 0) + 1;
-                m.insert(x.1, v);
-                m
-            });
-            match histogram.iter()
-                .find(|x| *x.1 == 1) {
-                Some((unbalanced_weight, _)) => {
-                    current = *node.children.iter().find(|c|{
-                        self.nodes[**c].total_weight == *unbalanced_weight
-                    }).unwrap();
-                    peer_size = *histogram.iter().find(|x| *(*x).1 != 1).unwrap().0;
-                }
-                None => {
-                    cont = false
-                }
-            }
-        }
-
-        let n = &self.nodes[current];
-        println!("peer: {}", peer_size);
-        println!("node: {:?}", (n.name.clone(), n.total_weight));
-        (n.name.clone(), n.weight + peer_size - n.total_weight)
-    }
-
-    fn set_weights<'a>(&'a mut self, idx: usize) {
-        let node = self.nodes[idx].clone();
-//        let children = self.nodes[idx].children.clone();
-        for c in node.children.iter() {
-            self.set_weights(*c);
-        }
-
-//        let node = &mut self.nodes[idx as usize];
-        if node.total_weight < node.weight {
-            let mut sum = 0;
-            for c in node.children {
-//            let child_weight: u64 = node.children.iter().map(|c| {
-//                self.set_weights(*c);
-                sum += self.nodes[c].total_weight
-            }
-
-            self.nodes[idx as usize].total_weight = node.weight + sum;
+    for l in contents.split("\n") {
+        if l.contains("A") {
+            let v = l.split_whitespace().collect::<Vec<_>>();
+            a_prev = v[v.len() - 1].parse::<u64>().unwrap();
+        } else if l.contains("B") {
+            let v = l.split_whitespace().collect::<Vec<_>>();
+            b_prev = v[v.len() - 1].parse::<u64>().unwrap();
         }
     }
 
-    fn count_group_size(idx: usize) -> u32 {
-        let mut visited = HashSet::new();
-        let mut unvisited = vec![idx];
-        while !unvisited.is_empty() {
-            let next = unvisited.
-            visited.insert()
+    let mut generator_a = Generator {
+        previous: a_prev,
+        factor: 16807,
+    };
+    let mut generator_b = Generator {
+        previous: b_prev,
+        factor: 48271,
+    };
+
+
+    let mask = (1 << 16) - 1;
+    let mut value = 0;
+    let mut i = 0;
+    while i < 40000000 {
+
+        if (generator_a.generate() & mask) == (generator_b.generate() & mask) {
+            value += 1;
         }
+
+        i += 1
     }
+
+    println!("matches: {}", value);
 }
 
-fn construct_graph(input: &String) -> (Graph, HashMap<String, usize>) {
-    let mut nodes = HashMap::new();
-    let mut graph = Graph { nodes: vec![], root: 0 };
-    let mut temp_children = HashMap::new();
-    let mut indices = HashSet::new();
+struct Generator {
+    previous: u64,
+    factor: u64,
+}
 
-    input.split("\n").filter(|x| x.len() > 0).for_each(|line| {
-        let mut children = Vec::new();
-        let mut idx = 0;
-        let mut node_idx = 0;
-        line.split_whitespace().for_each(|item| {
-            match idx {
-                0 => {
-                    node_idx = graph.nodes.len();
-                    graph.nodes.push(Node { children: vec![], name: item.to_string(), weight: 0, total_weight: 0, balanced: false });
-                    nodes.insert(item.to_string(), node_idx);
-                    indices.insert(node_idx);
-                }
-//                1 => {
-//                    graph.nodes[node_idx].weight = item[1..(item.len() - 1)].parse::<u64>().unwrap();
-//                }
-                1 => {}
-                _ => {
-                    let child = if (*item).to_string().as_bytes()[(item.len() - 1)] == ',' as u8 {
-                        item[0..(item.len() - 1)].to_string().trim().to_string()
-                    } else {
-                        item[..].to_string().trim().to_string()
-                    };
-                    children.push(child);
-                }
-            }
-            idx += 1;
-        });
-        temp_children.insert(node_idx, children);
-    });
-    // rebuild child links
-    temp_children.iter().for_each(|(idx, children)| {
-        let node = &mut graph.nodes[*idx];
-        (*node).children = children.iter().map(|s| {
-            let r = *nodes.get(s).unwrap();
-            indices.remove(&r);
-            r
-        }).collect();
-    });
-    graph.root = *indices.iter().next().unwrap();
-    (graph, nodes)
+impl Generator {
+    fn generate(&mut self) -> u64 {
+        let next = (self.previous * self.factor) % 2147483647;
+        self.previous = next;
+        next
+    }
 }
 
 #[test]
-fn graph_test() {
-    let mut g = construct_graph(&"0 <-> 2
-1 <-> 1
-2 <-> 0, 3, 4
-3 <-> 2, 4
-4 <-> 2, 3, 6
-5 <-> 6
-6 <-> 4, 5".to_string());
-    assert_eq!(g.nodes[g.root].name, "tknk".to_string());
-    assert_eq!(g.find_unbalanced_child(), ("ugml".to_string(), 60));
+fn test_generator() {
+    let mut genA = Generator { previous: 65, factor: 16807 };
+    let mut genB = Generator { previous: 8921, factor: 48271 };
+    assert_eq!(genA.generate(), 1092455);
+    assert_eq!(genB.generate(), 430625591);
+
+    assert_eq!(genA.generate(), 1181022009);
+    assert_eq!(genB.generate(), 1233683848);
+
+    assert_eq!(genA.generate(), 245556042);
+    assert_eq!(genB.generate(), 1431495498);
+
+    assert_eq!(genA.generate(), 1744312007);
+    assert_eq!(genB.generate(), 137874439);
+
+    assert_eq!(genA.generate(), 1352636452);
+    assert_eq!(genB.generate(), 285222916);
+
+
 }
