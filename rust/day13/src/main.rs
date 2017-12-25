@@ -18,11 +18,57 @@ fn main() {
         .expect("something went wrong reading the file");
 
     let score = scan_firewall(&contents);
+    let firewall = get_firewall(&contents);
+    println!("walls: {:?}", firewall.walls);
 
     println!("score {:?}", score);
+    println!("optimal delay {:?}", firewall.get_delay());
 }
 
-fn scan_firewall(firewall:&String) -> u64 {
+struct Firewall {
+    walls: Vec<(u64, u64)>
+}
+
+impl Firewall {
+    fn get_delay(&self) -> Option<u64> {
+        let mut i = 0;
+        let mut found = false;
+        while !found && i < u64::max_value() {
+            let mut hit = false;
+            let mut wi = 0;
+            while !hit && wi < self.walls.len() {
+                let (idx, height) = self.walls[wi];
+                if ((idx + i) % ((height - 1) * 2)) == 0 {
+                    hit = true;
+                } else {
+                    wi += 1
+                }
+            }
+            if hit == false {
+                found = true;
+            } else {
+                i += 1;
+            }
+        }
+        if found {
+            Some(i)
+        } else {
+            None
+        }
+    }
+}
+
+fn get_firewall(firewall: &String) -> Firewall {
+    Firewall {
+        walls: firewall.split("\n").filter(|x| !x.is_empty()).map(|l| {
+            let nums = l.split(":").map(|x| x.trim().parse::<u64>().expect("failed")).collect::<Vec<_>>();
+            (nums[0], nums[1])
+        })
+            .collect()
+    }
+}
+
+fn scan_firewall(firewall: &String) -> u64 {
     let mut score = 0;
     firewall.split("\n").filter(|x| !x.is_empty()).for_each(|l| {
         let nums = l.split(":").map(|x| x.trim().parse::<u64>().expect("failed")).collect::<Vec<_>>();
