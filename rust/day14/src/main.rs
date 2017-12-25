@@ -11,13 +11,69 @@ use std::slice::Split;
 fn main() {
     let input = env::args().skip(1).next().unwrap();
 
-    let mut num_ones:u32 = 0;
+    let mut rows = Vec::new();
+
+    let mut num_ones: u32 = 0;
     for x in 0..128 {
         let string = format!("{}-{}", input, x);
-        num_ones += hash_string(string.as_bytes().to_vec()).into_iter().map(|x| x.count_ones()).sum();
+        let row = hash_string(string.as_bytes().to_vec());
+        num_ones += row.iter().map(|x| (*x).count_ones()).sum();
+        row.iter().for_each(|b| print!("{:08b}", b));
+        println!();
+        rows.push(row);
+    }
+    println!("num ones {}", num_ones);
+
+    let mut groups = 0;
+
+    struct Grid {
+        rows: Vec<Vec<u8>>
     }
 
-    println!("num ones {}", num_ones);
+    let mut grid = Grid { rows };
+    impl Grid {
+        fn is_used(&self, x: usize, y: usize) -> bool {
+            (self.rows[y][x >> 3] & (1 << (7 - (x & 7)))) > 0
+        }
+    }
+
+    for y in 0..128 {
+        for x in 0..128 {
+            if grid.is_used(x, y) {
+                groups += 1;
+
+                let mut to_consider = vec![(x, y)];
+                let mut group_size = 0;
+                while let Some((x, y)) = to_consider.pop() {
+                    group_size += 1;
+                    {
+                        let p = &mut grid.rows[y][x >> 3];
+                        let little_x = 7 - (x & 7);
+                        *p = (*p) & !(1 << little_x);
+                    }
+                    let mut neighbors = vec![];
+                    if y > 0 {
+                        neighbors.push((x, y - 1));
+                    }
+                    if y < 127 {
+                        neighbors.push((x, y + 1));
+                    }
+                    if x > 0 {
+                        neighbors.push((x - 1, y));
+                    }
+                    if x < 127 {
+                        neighbors.push((x + 1, y));
+                    }
+                    for (x, y) in neighbors.into_iter() {
+                        if grid.is_used(x, y) {
+                            to_consider.push((x, y));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    println!("num groups {}", groups);
 }
 
 fn hash_string(lengths: Vec<u8>) -> Vec<u8> {
