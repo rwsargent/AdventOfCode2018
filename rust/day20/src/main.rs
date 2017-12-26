@@ -8,6 +8,12 @@ use std::num;
 use std::ops::Index;
 use std::slice::Split;
 
+
+extern crate regex;
+
+use regex::Regex;
+
+
 fn main() {
     let input = env::args().skip(1).next().unwrap();
 
@@ -17,157 +23,114 @@ fn main() {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    let (mut g, _) = construct_graph(&contents);
+    let RE: Regex = Regex::new(r"p=<(\-?\d+),.*?(\-?\d+),.*?(\-?\d+)>.*?v=<(\-?\d+),.*?(\-?\d+),.*?(\-?\d+)>.*?a=<(\-?\d+),.*?(\-?\d+),.*?(\-?\d+)>").unwrap();
 
-    println!("root node: {:?}", g.nodes[g.root].name);
+    let mut particles: Vec<Particle> = contents.split("\n").filter(|x| !x.is_empty()).map(|x| Particle::from_str(&RE, x)).collect();
 
-    let root = g.root;
-    g.set_weights(root);
-    println!("node to change: {:?}", g.find_unbalanced_child());
-}
-
-#[derive(Clone)]
-struct Node {
-    children: Vec<usize>,
-    name: String,
-    weight: u64,
-    total_weight: u64,
-    balanced: bool
-}
-
-struct Graph {
-    nodes: Vec<Node>,
-    root: usize
-}
-
-impl Graph {
-    pub fn find_unbalanced_child(&mut self) -> (String, u64) {
-        let mut current = self.root;
-        self.set_weights(current);
-
-        let mut last: usize = self.root;
-        let mut peer_size: u64 = 0;
-
-        let mut cont = true;
-        while cont {
-            let node = &self.nodes[current];
-            let child_count = node.children.len();
-            assert!(child_count == 0 || child_count > 2);
-            // find unbalanced one and set to current
-            let histogram = node.children.iter().map(|c| {
-                (*c, self.nodes[*c].total_weight)
-            }).fold(HashMap::new(), |mut m, x| {
-                let v = m.remove(&x.1).unwrap_or_else(|| 0) + 1;
-                m.insert(x.1, v);
-                m
-            });
-            match histogram.iter()
-                .find(|x| *x.1 == 1) {
-                Some((unbalanced_weight, _)) => {
-                    current = *node.children.iter().find(|c|{
-                        self.nodes[**c].total_weight == *unbalanced_weight
-                    }).unwrap();
-                    peer_size = *histogram.iter().find(|x| *(*x).1 != 1).unwrap().0;
-                }
-                None => {
-                    cont = false
+    for u in 0..10000 {
+        for i in 0..particles.len() {
+            if particles[i].alive {
+                particles[i].step();
+            }
+        }
+        let mut map: HashMap<Vector, Vec<usize>> = HashMap::new();
+        for i in 0..particles.len() {
+            if particles[i].alive {
+                if map.contains_key(&particles[i].position) {
+                    map.get_mut(&particles[i].position).unwrap().push(i);
+                } else {
+                    map.insert(particles[i].position.clone(), vec![i]);
                 }
             }
         }
-
-        let n = &self.nodes[current];
-        println!("peer: {}", peer_size);
-        println!("node: {:?}", (n.name.clone(), n.total_weight));
-        (n.name.clone(), n.weight + peer_size - n.total_weight)
-    }
-
-    fn set_weights<'a>(&'a mut self, idx: usize) {
-        let node = self.nodes[idx].clone();
-//        let children = self.nodes[idx].children.clone();
-        for c in node.children.iter() {
-            self.set_weights(*c);
-        }
-
-//        let node = &mut self.nodes[idx as usize];
-        if node.total_weight < node.weight {
-            let mut sum = 0;
-            for c in node.children {
-//            let child_weight: u64 = node.children.iter().map(|c| {
-//                self.set_weights(*c);
-                sum += self.nodes[c].total_weight
+        for (_, v) in map {
+            if v.len() > 1 {
+                for i in v {
+                    particles[i].alive = false;
+                }
             }
-
-            self.nodes[idx as usize].total_weight = node.weight + sum;
         }
     }
 
-    fn count_group_size(idx: usize) -> u32 {
-        let mut visited = HashSet::new();
-        let mut unvisited = vec![idx];
-        while !unvisited.is_empty() {
-            let next = unvisited.
-            visited.insert()
+    let mut min = i64::max_value();
+    let mut min_idx = 0;
+    for i in 0..particles.len() {
+        let d = particles[i].position.manhattan_mag();
+        if d < min {
+            min = d;
+            min_idx = i;
         }
+    }
+
+    let alive_count = particles.iter().filter(|x| x.alive).count();
+
+    println!("partilce {}", min_idx);
+    println!("alive particles {}", alive_count);
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+struct Vector {
+    x: i64,
+    y: i64,
+    z: i64
+}
+
+impl Vector {
+    fn plus(&self, other: &Vector) -> Vector {
+        Vector { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
+    }
+    fn zero() -> Vector {
+        Vector { x: 0, y: 0, z: 0 }
+    }
+    fn manhattan_mag(&self) -> i64 {
+        self.x.abs() + self.y.abs() + self.z.abs()
     }
 }
 
-fn construct_graph(input: &String) -> (Graph, HashMap<String, usize>) {
-    let mut nodes = HashMap::new();
-    let mut graph = Graph { nodes: vec![], root: 0 };
-    let mut temp_children = HashMap::new();
-    let mut indices = HashSet::new();
+#[derive(Debug, Clone, Eq, PartialEq)]
+struct Particle {
+    position: Vector,
+    velocity: Vector,
+    acceleration: Vector,
+    alive: bool
+}
 
-    input.split("\n").filter(|x| x.len() > 0).for_each(|line| {
-        let mut children = Vec::new();
-        let mut idx = 0;
-        let mut node_idx = 0;
-        line.split_whitespace().for_each(|item| {
-            match idx {
-                0 => {
-                    node_idx = graph.nodes.len();
-                    graph.nodes.push(Node { children: vec![], name: item.to_string(), weight: 0, total_weight: 0, balanced: false });
-                    nodes.insert(item.to_string(), node_idx);
-                    indices.insert(node_idx);
-                }
-//                1 => {
-//                    graph.nodes[node_idx].weight = item[1..(item.len() - 1)].parse::<u64>().unwrap();
-//                }
-                1 => {}
-                _ => {
-                    let child = if (*item).to_string().as_bytes()[(item.len() - 1)] == ',' as u8 {
-                        item[0..(item.len() - 1)].to_string().trim().to_string()
-                    } else {
-                        item[..].to_string().trim().to_string()
-                    };
-                    children.push(child);
-                }
-            }
-            idx += 1;
-        });
-        temp_children.insert(node_idx, children);
-    });
-    // rebuild child links
-    temp_children.iter().for_each(|(idx, children)| {
-        let node = &mut graph.nodes[*idx];
-        (*node).children = children.iter().map(|s| {
-            let r = *nodes.get(s).unwrap();
-            indices.remove(&r);
-            r
-        }).collect();
-    });
-    graph.root = *indices.iter().next().unwrap();
-    (graph, nodes)
+
+impl Particle {
+    fn step(&mut self) {
+        self.velocity = self.velocity.plus(&self.acceleration);
+        self.position = self.position.plus(&self.velocity);
+    }
+
+    fn from_str(RE: &Regex, string: &str) -> Particle {
+        let cap = RE.captures_iter(string).next().unwrap();
+        Particle {
+            position: Vector {
+                x: cap[1].parse::<i64>().unwrap(),
+                y: cap[2].parse::<i64>().unwrap(),
+                z: cap[3].parse::<i64>().unwrap(),
+            },
+            velocity: Vector {
+                x: cap[4].parse::<i64>().unwrap(),
+                y: cap[5].parse::<i64>().unwrap(),
+                z: cap[6].parse::<i64>().unwrap(),
+            },
+            acceleration: Vector {
+                x: cap[7].parse::<i64>().unwrap(),
+                y: cap[8].parse::<i64>().unwrap(),
+                z: cap[9].parse::<i64>().unwrap(),
+            },
+            alive: true
+        }
+    }
 }
 
 #[test]
-fn graph_test() {
-    let mut g = construct_graph(&"0 <-> 2
-1 <-> 1
-2 <-> 0, 3, 4
-3 <-> 2, 4
-4 <-> 2, 3, 6
-5 <-> 6
-6 <-> 4, 5".to_string());
-    assert_eq!(g.nodes[g.root].name, "tknk".to_string());
-    assert_eq!(g.find_unbalanced_child(), ("ugml".to_string(), 60));
+fn particle_test() {
+    let p = Particle::from_str("p=<1230,-475,-2427>, v=<167,-65,-346>, a=<-16,1,24>");
+    assert_eq!(p, Particle {
+        position: Vector { x: 1230, y: -475, z: -2427 },
+        velocity: Vector { x: 167, y: -65, z: -346 },
+        acceleration: Vector { x: -16, y: 1, z: 24 }
+    });
 }
