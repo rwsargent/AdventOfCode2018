@@ -43,7 +43,7 @@ fn run(program: &String) -> i64 {
     let mut idx: i64 = 0;
     while idx >= 0 && (idx as usize) <= cmds.len() {
         let cmd = &cmds[idx as usize];
-        println!("{}\t\t{:?}\t\t{:?}", idx, cmd, registers.registers);
+//        println!("{}\t\t{:?}\t\t{:?}", idx, cmd, registers.registers);
         let mut jumped = false;
         match cmd[0] {
             "snd" => {
