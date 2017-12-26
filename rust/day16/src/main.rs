@@ -17,12 +17,28 @@ fn main() {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
     let starting_program = (('a' as u8)..('q' as u8)).collect();
-    let result = dance(starting_program, &contents);
+    let mut result = dance(&starting_program, &contents);
+
+    // find permutations
+    let mut index = 1;
+    while result != starting_program {
+        result = dance(&result, &contents);
+        index += 1;
+    }
+
+    println!("index {}", index);
+
+    let mut extra = 1000000000 % index;
+
+    while extra > 0 {
+        result = dance(&result, &contents);
+        extra -= 1;
+    }
 
     println!("finished: {:?}", String::from_utf8(result));
 }
 
-fn dance(in_programs: Vec<u8>, dance: &String) -> Vec<u8> {
+fn dance(in_programs: &Vec<u8>, dance: &String) -> Vec<u8> {
     let mut programs = in_programs.clone();
 
     for dance_move in dance.split(",") {
@@ -70,7 +86,7 @@ fn dance(in_programs: Vec<u8>, dance: &String) -> Vec<u8> {
 #[test]
 fn graph_test() {
     assert_eq!(
-        dance((('a' as u8)..('f' as u8)).collect(), &"s1,x3/4,pe/b".to_string()),
+        dance(&(('a' as u8)..('f' as u8)).collect(), &"s1,x3/4,pe/b".to_string()),
         "baedc".as_bytes().to_vec()
     )
 }
