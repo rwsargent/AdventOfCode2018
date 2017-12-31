@@ -1,15 +1,11 @@
 package day19
 
+import "utils"
 
 type Cursor struct {
 	Row, Col int
 }
 
-func FollowPath(cursor Cursor, graph [][]string) {
-	var path string
+func FollowPath(cursor Cursor, graph []string) {
 	
-}
-
-func buildGraph(filename string) {
-	line  := range 
 }
