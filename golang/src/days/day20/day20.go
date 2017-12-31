@@ -133,6 +133,11 @@ func RunSimulation(particles []*Particle, iterations int) Particle {
 	return minParticle;
 }
 
+func RunSimulationParallel(particles []*Particle, iterations int, channel chan Particle) {
+	min := RunSimulation(particles, iterations)
+	channel <- min
+}
+
 func ParseInput(path string) []*Particle {
 	lines := util.MustReadInput(path)
 	particles := make([]*Particle, 0, len(lines))
