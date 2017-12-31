@@ -3,7 +3,6 @@ package day20
 import (
 	"utils"
 	"regexp"
-	"fmt"
 )
 
 type Vector struct {
