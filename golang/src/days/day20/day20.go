@@ -3,7 +3,6 @@ package day20
 import (
 	"utils"
 	"regexp"
-	"fmt"
 )
 
 type Vector struct {
@@ -132,6 +131,11 @@ func RunSimulation(particles []*Particle, iterations int) Particle {
 		}
 	}
 	return minParticle;
+}
+
+func RunSimulationParallel(particles []*Particle, iterations int, channel chan Particle) {
+	min := RunSimulation(particles, iterations)
+	channel <- min
 }
 
 func ParseInput(path string) []*Particle {
