@@ -15,52 +15,43 @@ object Day10 {
 
   def main(args: Array[String]): Unit = {
 
-    calcPosition()
+    println(knotHash(inputLengths, nums))
 
   }
 
+  def knotHash(lengths: Seq[Int], data: Seq[Int]): Seq[Int] = {
+    var tmpSeq: Seq[Int] = data
+    lengths.map(length => {
 
-  def calcPosition(): List[Int] = {
+      val slices = calcSliceForData(curPos, length)
+      val append = tmpSeq.slice(slices(0)._1, slices(0)._2).reverse
+      val prepend = tmpSeq.slice(slices(1)._1, slices(1)._2).reverse
+      val middle = tmpSeq.slice(slices(1)._2, slices(0)._1)
 
-    inputLengths.map(length => {
+      tmpSeq = prepend ++ middle ++ append
 
-      println(s"starting loop, nums is now: $nums \n")
-      val reversed = nums.slice(curPos, curPos + length + 1)
-        .reverse
-      println(s"reversed is: $reversed \n")
-      val append = nums.slice(curPos + length + 1, nums.size + 1)
-      println(s"append is: $append \n")
-      nums = List.concat(reversed, append)
-
-      if (nums.size - (curPos + length + skipSize) <= 0) {
-
-        curPos = (curPos + length + skipSize) - nums.size
-        println(s"curPos size reached, now is: $curPos \n")
-      }
-      else {
-        curPos = curPos + length + skipSize
-        println(s"incrementing curPos normally and is now: $curPos \n")
-      }
-
+      curPos = curPos + length + skipSize
       skipSize += 1
 
-      println(s"nums is now: $nums")
-    }
-    )
-    return nums
+    })
+
+    tmpSeq
+
   }
 
-  def calcSlice(curPos: Int, skipSize: Int, length: Int): List[(Int, Int)] = {
+  def calcSliceForData(curPos: Int, length: Int): List[(Int, Int)] = {
     val tmpTotalSize = curPos + length
     val start = curPos
 
     val slices = new ListBuffer[(Int, Int)]()
 
-    slices.append((start, length))
-
     if(tmpTotalSize > nums.size) {
+      slices.append((start, length))
       val nextEnd = tmpTotalSize - nums.size
       slices.append((0, nextEnd))
+    }
+    else {
+      slices.append((start, start + length))
     }
 
     slices.toList
