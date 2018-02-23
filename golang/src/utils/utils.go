@@ -9,6 +9,7 @@ import (
 	"strings"
 	"strconv"
 	"math"
+	"time"
 )
 
 func MustReadInput(filename string) []string {
@@ -115,4 +116,17 @@ func Sum(list *[]int) int {
 		sum += el
 	}
 	return sum
+}
+
+func MustAtoi(number string) int {
+	num, err := strconv.Atoi(strings.TrimSpace(number));
+	if(err != nil) {
+		panic(err)
+	}
+	return num
+}
+
+func TimeTrack(start time.Time, message string) {
+	elapsed := time.Since(start)
+	fmt.Printf("%s took %s\n", message, elapsed)
 }
