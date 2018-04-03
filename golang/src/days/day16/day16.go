@@ -21,13 +21,25 @@ func SolveFirst() {
 func SolveSecond() {
 	moves := strings.Split(util.MustReadInput("inputs/day16.txt")[0], ",")
 	var dancers = dancers_const
-	for count := 0; count < 1000000000; count++ {
-		if count % 1000000 == 0 {
-			println(count)
-		}
+
+	memo := make(map[string]int)
+	count := 0
+	for ; count < 1000000000; count++ {
 		dancers = dance(moves, dancers)
+		if _, ok := memo[strings.Join(dancers, "")]; ok {
+			break;
+		}
+		memo[strings.Join(dancers, "")] = count
 	}
-	println(strings.Join(dancers, ""))
+	println("Length:", len(memo))
+
+	billionth := 1000000000 % count
+	for key, value := range memo {
+		if value == billionth-1 {
+			println("Billionith permutation:", key)
+		}
+	}
+	
 }
 
 func dance(moves []string, dancers []string) []string {

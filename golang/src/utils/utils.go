@@ -9,6 +9,7 @@ import (
 	"strings"
 	"strconv"
 	"math"
+	"time"
 )
 
 func MustReadInput(filename string) []string {
@@ -123,4 +124,9 @@ func MustAtoi(number string) int {
 		panic(err)
 	}
 	return num
+}
+
+func TimeTrack(start time.Time, message string) {
+	elapsed := time.Since(start)
+	fmt.Printf("%s took %s\n", message, elapsed)
 }
