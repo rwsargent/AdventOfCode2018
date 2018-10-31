@@ -18,10 +18,12 @@ fn main() {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    let rules = parse_rules2(&contents);
+    let rules = parse_rules(&contents);
+    println!("numRules: {}", rules.len());
 //    for (x, y) in &rules {
-////        println!("{:?}:", x);
-////        print_img(&y);
+//        print_img_flat(x);
+//        print_img_flat(&y);
+//        println!("!")
 //    }
 
     let mut image = ".#...####".to_string().into_bytes();
@@ -29,17 +31,11 @@ fn main() {
     print_img(&image);
     let mut total_used_rules = HashSet::new();
     for i in 0..iterations {
-        let (used_rules, new_image) = iterate2(&image, &rules);
+        let (used_rules, new_image) = iterate(&image, &rules);
         image = new_image;
         for r in used_rules {
             total_used_rules.insert(r.clone());
         }
-        print_img(&image);
-    }
-
-    println!("used rules:");
-    for r in total_used_rules {
-        println!("{:?}", r);
     }
 
     let num_ones: usize = image.iter().map(|x| {
@@ -97,10 +93,8 @@ fn iterate(image: &Vec<u8>, rules: &HashMap<CanonicalSquare, Vec<u8>>) -> (HashS
                 block.set_len(block_size_sqrd);
             }
             for i in 0..block_size_sqrd {
-                block[i] = image[((y + (i / block_size)) * size) + (x * block_size) + i % block_size];
+                block[i] = image[((y * block_size + (i / block_size)) * size) + (x * block_size) + i % block_size];
             }
-//            println!("img:");
-//            print_img(&block);
             let canonical_square = CanonicalSquare::new(&block);
             used_rules.insert(canonical_square.clone());
             let new_block = rules.get(&canonical_square).expect(format!("can't find canonical square {:?}", &canonical_square).as_str());
@@ -112,55 +106,6 @@ fn iterate(image: &Vec<u8>, rules: &HashMap<CanonicalSquare, Vec<u8>>) -> (HashS
 
     (used_rules, result)
 }
-fn iterate2(image: &Vec<u8>, rules: &HashMap<Vec<u8>, Vec<u8>>) -> (HashSet<CanonicalSquare>, Vec<u8>) {
-    let mut used_rules = HashSet::new();
-    let size = (image.len() as f64).sqrt() as usize;
-    let block_size = if (size & 1) == 0 {
-        2
-    } else {
-        3
-    };
-    let block_size_sqrd = block_size * block_size;
-
-    let num_blocks = size / block_size;
-
-    let new_block_size = block_size + 1;
-    let new_block_size_sqrd = new_block_size * new_block_size;
-    let new_size = num_blocks * new_block_size;
-
-    let mut result = {
-        let s = new_size * new_size;
-        let mut r = Vec::with_capacity(s);
-        unsafe {
-            r.set_len(s);
-        }
-        r
-    };
-
-
-    for y in 0..num_blocks {
-        for x in 0..num_blocks {
-            let mut block = Vec::with_capacity(block_size_sqrd);
-            unsafe {
-                block.set_len(block_size_sqrd);
-            }
-            for i in 0..block_size_sqrd {
-                block[i] = image[((y + (i / block_size)) * size) + (x * block_size) + i % block_size];
-            }
-//            println!("img:");
-//            print_img(&block);
-//            let canonical_square = CanonicalSquare::new(&block);
-//            used_rules.insert(canonical_square.clone());
-            let new_block = rules.get(&block).unwrap();//.expect(format!("can't find canonical square {:?}", &canonical_square).as_str());
-            for i in 0..new_block_size_sqrd {
-                result[(x * new_block_size + (i % new_block_size)) + (((y * new_block_size) + (i / new_block_size)) * new_size)] = new_block[i];
-            }
-        }
-    }
-
-    (used_rules, result)
-}
-
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 struct CanonicalSquare {
@@ -273,11 +218,10 @@ impl CanonicalSquare {
 fn parse_rules(input: &String) -> HashMap<CanonicalSquare, Vec<u8>> {
     input.split("\n").map(|x| {
         let tiles = x.split("=>").map(|x| {
-            x.trim().replace("/", "").into_bytes()//.filter(|x| x != "/").collect::<String>()
+            x.trim().replace("/", "").into_bytes()
         }).collect::<Vec<_>>();
         let c = CanonicalSquare::new(&tiles[0]);
         let v = tiles[1].clone();
-        println!("{:?} -> {:?}", &c, String::from_utf8(v.clone()).unwrap());
         (c, v)
     }).collect()
 }
@@ -290,7 +234,7 @@ fn parse_rules2(input: &String) -> HashMap<Vec<u8>, Vec<u8>> {
         if tiles.len() == 4 {}
         let c = CanonicalSquare::new(&tiles[0]);
         let v = tiles[1].clone();
-        println!("{:?} -> {:?}", &c, String::from_utf8(v.clone()).unwrap());
+//        println!("{:?} -> {:?}", &c, String::from_utf8(v.clone()).unwrap());
         let variations = variations(&tiles[0]);
         variations.into_iter().map(|v2| {
             (v2, v.clone())
@@ -298,25 +242,26 @@ fn parse_rules2(input: &String) -> HashMap<Vec<u8>, Vec<u8>> {
     }).collect()
 }
 
-//fn variations2(img: &Vec<u8>) -> Vec<Vec<u8>> {}
+fn variations2(img: &Vec<u8>) -> HashSet<Vec<u8>> {
 
-fn variations(img: &Vec<u8>) -> Vec<Vec<u8>> {
-//    let mut result = vec![img.clone()];
-//    for rotate in 0..4 {
-//        let mut v = img.clone();
-//        let mut i = 0;
-//        while i < rotate {
-//            v = rotate_left(&v);
-//            i += 1;
-//        }
-//        result.push(flip_horiz(&v));
-//        result.push(flip_virt(&v));
-//        result.push(flip_virt(&flip_horiz(&v)));
-//        result.push(v);
-//    }
-//    result
+    let mut result = HashSet::new();
 
+    for rotate in 0..4 {
+        let mut v = img.clone();
+        let mut i = 0;
+        while i < rotate {
+            v = rotate_left(&v);
+            i += 1;
+        }
+        result.insert(flip_horiz(&v));
+        result.insert(flip_virt(&v));
+        result.insert(flip_virt(&flip_horiz(&v)));
+        result.insert(v);
+    }
+    result
+}
 
+fn variations(img: &Vec<u8>) -> HashSet<Vec<u8>> {
 
     let size = if img.len() == 4 { 2 } else { 3 };
 
@@ -331,7 +276,7 @@ fn variations(img: &Vec<u8>) -> Vec<Vec<u8>> {
         &|i, j| (size - j - 1, size - i - 1),
     ];
 
-    let mut result = vec![];
+    let mut result = HashSet::new();
 
     for trans in transforms {
         let mut v = img.clone();
@@ -341,7 +286,7 @@ fn variations(img: &Vec<u8>) -> Vec<Vec<u8>> {
                 v[j * size + i] = img[j2 * size + i2];
             }
         }
-        result.push(v);
+        result.insert(v);
     }
 
     result
@@ -470,7 +415,14 @@ fn canonical_test() {
 //        let img = "........#".to_string().into_bytes();
         let cimg = CanonicalSquare::new(&img);
         println!("{} {:8b} {:?} {:?}", i, i, String::from_utf8(img.clone()).unwrap(), cimg);
-        for v in variations(&img) {
+
+        let set1 = variations(&img);
+        let set2 = variations2(&img);
+        println!("{:?}", set1);
+        println!("{:?}", set2);
+        assert_eq!(set1, set2);
+
+        for v in set1 {
             assert_eq!(CanonicalSquare::new(&v), cimg);
         }
     }
