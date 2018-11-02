@@ -22,19 +22,21 @@ fn main() {
     let mid = side_length / 2;
     // build state
 
-    let infectedNodes =
-        contents.into_bytes().into_iter().enumerate()
+
+
+    let infected_nodes =
+        contents.into_bytes().into_iter()
+            .filter(|c| *c != '\n' as u8).enumerate()
             .filter(|(i, x)| *x == '#' as u8)
             .map(|(i, x)| {
-                let x = mid - ((i as i32) % side_length);
+                let x = (i as i32) % side_length - mid;
                 let y = mid - ((i as i32) / side_length);
                 (x, y)
             })
             .collect::<HashSet<_>>();
 
-
     let mut state = State {
-        infectedNodes,
+        infectedNodes: infected_nodes,
         virusPosition: (0, 0),
         virusDirection: Direction::Up,
     };
@@ -63,9 +65,9 @@ impl Direction {
     pub fn turn_right(&self) -> Direction {
         match self {
             Direction::Up => Direction::Right,
-            Direction::Left => Direction::Up,
-            Direction::Down => Direction::Left,
             Direction::Right => Direction::Down,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
         }
     }
 }
