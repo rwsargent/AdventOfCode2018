@@ -23,7 +23,6 @@ fn main() {
     // build state
 
 
-
     let infected_nodes =
         contents.into_bytes().into_iter()
             .filter(|c| *c != '\n' as u8).enumerate()
@@ -31,9 +30,9 @@ fn main() {
             .map(|(i, x)| {
                 let x = (i as i32) % side_length - mid;
                 let y = mid - ((i as i32) / side_length);
-                (x, y)
+                ((x, y), InfectionStatus::Infected)
             })
-            .collect::<HashSet<_>>();
+            .collect::<HashMap<_, _>>();
 
     let mut state = State {
         infectedNodes: infected_nodes,
@@ -43,12 +42,15 @@ fn main() {
 
     let mut bursts = 0;
     for _ in 0..iterations {
-        if state.burst() {
+        if state.burst2() {
             bursts += 1;
         }
     }
     println!("Num bursts causing infection: {}", bursts);
 }
+
+#[derive(Debug, Clone, PartialEq)]
+enum InfectionStatus { Cleaned, Weakened, Infected, Flagged }
 
 #[derive(Debug, Clone)]
 enum Direction { Up, Right, Down, Left }
@@ -76,18 +78,18 @@ impl Direction {
 struct State {
     virusPosition: (i32, i32),
     virusDirection: Direction,
-    infectedNodes: HashSet<(i32, i32)>,
+    infectedNodes: HashMap<(i32, i32), InfectionStatus>,
 }
 
 impl State {
     fn burst(&mut self) -> bool {
-        let infected = self.infectedNodes.contains(&self.virusPosition);
+        let infected = self.infectedNodes.contains_key(&self.virusPosition);
         if infected {
             self.virusDirection = self.virusDirection.turn_right();
             self.infectedNodes.remove(&self.virusPosition);
         } else {
             self.virusDirection = self.virusDirection.turn_left();
-            self.infectedNodes.insert(self.virusPosition.clone());
+            self.infectedNodes.insert(self.virusPosition.clone(), InfectionStatus::Infected);
         }
         let (x, y) = self.virusPosition;
         self.virusPosition = match self.virusDirection {
@@ -97,6 +99,34 @@ impl State {
             Direction::Right => (x + 1, y),
         };
         !infected
+    }
+
+    fn burst2(&mut self) -> bool {
+        let infected = self.infectedNodes.remove(&self.virusPosition).unwrap_or(InfectionStatus::Cleaned);
+        match infected {
+            InfectionStatus::Cleaned => {
+                self.virusDirection = self.virusDirection.turn_left();
+                self.infectedNodes.insert(self.virusPosition.clone(), InfectionStatus::Weakened);
+            },
+            InfectionStatus::Weakened => {
+                self.infectedNodes.insert(self.virusPosition.clone(), InfectionStatus::Infected);
+            },
+            InfectionStatus::Infected => {
+                self.virusDirection = self.virusDirection.turn_right();
+                self.infectedNodes.insert(self.virusPosition.clone(), InfectionStatus::Flagged);
+            },
+            InfectionStatus::Flagged => {
+                self.virusDirection = self.virusDirection.turn_right().turn_right();
+            },
+        }
+        let (x, y) = self.virusPosition;
+        self.virusPosition = match self.virusDirection {
+            Direction::Up => (x, y + 1),
+            Direction::Left => (x - 1, y),
+            Direction::Down => (x, y - 1),
+            Direction::Right => (x + 1, y),
+        };
+        infected == InfectionStatus::Weakened
     }
 }
 
