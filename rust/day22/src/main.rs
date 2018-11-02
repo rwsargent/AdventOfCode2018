@@ -9,7 +9,8 @@ use std::ops::Index;
 use std::slice::Split;
 
 fn main() {
-    let input = env::args().skip(1).next().unwrap();
+    let input = env::args().nth(1).unwrap();
+    let iterations = env::args().nth(2).map(|x| x.parse::<usize>().unwrap()).unwrap();
 
     let mut f = File::open(input).expect("file not found");
 
@@ -17,157 +18,83 @@ fn main() {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    let (mut g, _) = construct_graph(&contents);
+    let side_length = (contents.len() as f64).sqrt() as i32;
+    let mid = side_length / 2;
+    // build state
 
-    println!("root node: {:?}", g.nodes[g.root].name);
+    let infectedNodes =
+        contents.into_bytes().into_iter().enumerate()
+            .filter(|(i, x)| *x == '#' as u8)
+            .map(|(i, x)| {
+                let x = mid - ((i as i32) % side_length);
+                let y = mid - ((i as i32) / side_length);
+                (x, y)
+            })
+            .collect::<HashSet<_>>();
 
-    let root = g.root;
-    g.set_weights(root);
-    println!("node to change: {:?}", g.find_unbalanced_child());
-}
 
-#[derive(Clone)]
-struct Node {
-    children: Vec<usize>,
-    name: String,
-    weight: u64,
-    total_weight: u64,
-    balanced: bool
-}
+    let mut state = State {
+        infectedNodes,
+        virusPosition: (0, 0),
+        virusDirection: Direction::Up,
+    };
 
-struct Graph {
-    nodes: Vec<Node>,
-    root: usize
-}
-
-impl Graph {
-    pub fn find_unbalanced_child(&mut self) -> (String, u64) {
-        let mut current = self.root;
-        self.set_weights(current);
-
-        let mut last: usize = self.root;
-        let mut peer_size: u64 = 0;
-
-        let mut cont = true;
-        while cont {
-            let node = &self.nodes[current];
-            let child_count = node.children.len();
-            assert!(child_count == 0 || child_count > 2);
-            // find unbalanced one and set to current
-            let histogram = node.children.iter().map(|c| {
-                (*c, self.nodes[*c].total_weight)
-            }).fold(HashMap::new(), |mut m, x| {
-                let v = m.remove(&x.1).unwrap_or_else(|| 0) + 1;
-                m.insert(x.1, v);
-                m
-            });
-            match histogram.iter()
-                .find(|x| *x.1 == 1) {
-                Some((unbalanced_weight, _)) => {
-                    current = *node.children.iter().find(|c|{
-                        self.nodes[**c].total_weight == *unbalanced_weight
-                    }).unwrap();
-                    peer_size = *histogram.iter().find(|x| *(*x).1 != 1).unwrap().0;
-                }
-                None => {
-                    cont = false
-                }
-            }
-        }
-
-        let n = &self.nodes[current];
-        println!("peer: {}", peer_size);
-        println!("node: {:?}", (n.name.clone(), n.total_weight));
-        (n.name.clone(), n.weight + peer_size - n.total_weight)
-    }
-
-    fn set_weights<'a>(&'a mut self, idx: usize) {
-        let node = self.nodes[idx].clone();
-//        let children = self.nodes[idx].children.clone();
-        for c in node.children.iter() {
-            self.set_weights(*c);
-        }
-
-//        let node = &mut self.nodes[idx as usize];
-        if node.total_weight < node.weight {
-            let mut sum = 0;
-            for c in node.children {
-//            let child_weight: u64 = node.children.iter().map(|c| {
-//                self.set_weights(*c);
-                sum += self.nodes[c].total_weight
-            }
-
-            self.nodes[idx as usize].total_weight = node.weight + sum;
+    let mut bursts = 0;
+    for _ in 0..iterations {
+        if state.burst() {
+            bursts += 1;
         }
     }
+    println!("Num bursts causing infection: {}", bursts);
+}
 
-    fn count_group_size(idx: usize) -> u32 {
-        let mut visited = HashSet::new();
-        let mut unvisited = vec![idx];
-        while !unvisited.is_empty() {
-            let next = unvisited.
-            visited.insert()
+#[derive(Debug, Clone)]
+enum Direction { Up, Right, Down, Left }
+
+impl Direction {
+    pub fn turn_left(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Left,
+            Direction::Left => Direction::Down,
+            Direction::Down => Direction::Right,
+            Direction::Right => Direction::Up,
+        }
+    }
+    pub fn turn_right(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Right,
+            Direction::Left => Direction::Up,
+            Direction::Down => Direction::Left,
+            Direction::Right => Direction::Down,
         }
     }
 }
 
-fn construct_graph(input: &String) -> (Graph, HashMap<String, usize>) {
-    let mut nodes = HashMap::new();
-    let mut graph = Graph { nodes: vec![], root: 0 };
-    let mut temp_children = HashMap::new();
-    let mut indices = HashSet::new();
-
-    input.split("\n").filter(|x| x.len() > 0).for_each(|line| {
-        let mut children = Vec::new();
-        let mut idx = 0;
-        let mut node_idx = 0;
-        line.split_whitespace().for_each(|item| {
-            match idx {
-                0 => {
-                    node_idx = graph.nodes.len();
-                    graph.nodes.push(Node { children: vec![], name: item.to_string(), weight: 0, total_weight: 0, balanced: false });
-                    nodes.insert(item.to_string(), node_idx);
-                    indices.insert(node_idx);
-                }
-//                1 => {
-//                    graph.nodes[node_idx].weight = item[1..(item.len() - 1)].parse::<u64>().unwrap();
-//                }
-                1 => {}
-                _ => {
-                    let child = if (*item).to_string().as_bytes()[(item.len() - 1)] == ',' as u8 {
-                        item[0..(item.len() - 1)].to_string().trim().to_string()
-                    } else {
-                        item[..].to_string().trim().to_string()
-                    };
-                    children.push(child);
-                }
-            }
-            idx += 1;
-        });
-        temp_children.insert(node_idx, children);
-    });
-    // rebuild child links
-    temp_children.iter().for_each(|(idx, children)| {
-        let node = &mut graph.nodes[*idx];
-        (*node).children = children.iter().map(|s| {
-            let r = *nodes.get(s).unwrap();
-            indices.remove(&r);
-            r
-        }).collect();
-    });
-    graph.root = *indices.iter().next().unwrap();
-    (graph, nodes)
+#[derive(Debug, Clone)]
+struct State {
+    virusPosition: (i32, i32),
+    virusDirection: Direction,
+    infectedNodes: HashSet<(i32, i32)>,
 }
 
-#[test]
-fn graph_test() {
-    let mut g = construct_graph(&"0 <-> 2
-1 <-> 1
-2 <-> 0, 3, 4
-3 <-> 2, 4
-4 <-> 2, 3, 6
-5 <-> 6
-6 <-> 4, 5".to_string());
-    assert_eq!(g.nodes[g.root].name, "tknk".to_string());
-    assert_eq!(g.find_unbalanced_child(), ("ugml".to_string(), 60));
+impl State {
+    fn burst(&mut self) -> bool {
+        let infected = self.infectedNodes.contains(&self.virusPosition);
+        if infected {
+            self.virusDirection = self.virusDirection.turn_right();
+            self.infectedNodes.remove(&self.virusPosition);
+        } else {
+            self.virusDirection = self.virusDirection.turn_left();
+            self.infectedNodes.insert(self.virusPosition.clone());
+        }
+        let (x, y) = self.virusPosition;
+        self.virusPosition = match self.virusDirection {
+            Direction::Up => (x, y + 1),
+            Direction::Left => (x - 1, y),
+            Direction::Down => (x, y - 1),
+            Direction::Right => (x + 1, y),
+        };
+        !infected
+    }
 }
+
