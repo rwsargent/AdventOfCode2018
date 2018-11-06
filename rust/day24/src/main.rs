@@ -8,6 +8,11 @@ use std::num;
 use std::ops::Index;
 use std::slice::Split;
 
+extern crate bit_set;
+
+use bit_set::BitSet;
+
+
 fn main() {
     let input = env::args().skip(1).next().unwrap();
 
@@ -17,157 +22,79 @@ fn main() {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    let (mut g, _) = construct_graph(&contents);
+    //
+    let mut id_map = HashMap::new();
+    // map from port to other ports
+    let mut port_map: HashMap<usize, Vec<(usize, usize)>> = HashMap::new();
 
-    println!("root node: {:?}", g.nodes[g.root].name);
-
-    let root = g.root;
-    g.set_weights(root);
-    println!("node to change: {:?}", g.find_unbalanced_child());
-}
-
-#[derive(Clone)]
-struct Node {
-    children: Vec<usize>,
-    name: String,
-    weight: u64,
-    total_weight: u64,
-    balanced: bool
-}
-
-struct Graph {
-    nodes: Vec<Node>,
-    root: usize
-}
-
-impl Graph {
-    pub fn find_unbalanced_child(&mut self) -> (String, u64) {
-        let mut current = self.root;
-        self.set_weights(current);
-
-        let mut last: usize = self.root;
-        let mut peer_size: u64 = 0;
-
-        let mut cont = true;
-        while cont {
-            let node = &self.nodes[current];
-            let child_count = node.children.len();
-            assert!(child_count == 0 || child_count > 2);
-            // find unbalanced one and set to current
-            let histogram = node.children.iter().map(|c| {
-                (*c, self.nodes[*c].total_weight)
-            }).fold(HashMap::new(), |mut m, x| {
-                let v = m.remove(&x.1).unwrap_or_else(|| 0) + 1;
-                m.insert(x.1, v);
-                m
-            });
-            match histogram.iter()
-                .find(|x| *x.1 == 1) {
-                Some((unbalanced_weight, _)) => {
-                    current = *node.children.iter().find(|c|{
-                        self.nodes[**c].total_weight == *unbalanced_weight
-                    }).unwrap();
-                    peer_size = *histogram.iter().find(|x| *(*x).1 != 1).unwrap().0;
-                }
-                None => {
-                    cont = false
-                }
-            }
-        }
-
-        let n = &self.nodes[current];
-        println!("peer: {}", peer_size);
-        println!("node: {:?}", (n.name.clone(), n.total_weight));
-        (n.name.clone(), n.weight + peer_size - n.total_weight)
-    }
-
-    fn set_weights<'a>(&'a mut self, idx: usize) {
-        let node = self.nodes[idx].clone();
-//        let children = self.nodes[idx].children.clone();
-        for c in node.children.iter() {
-            self.set_weights(*c);
-        }
-
-//        let node = &mut self.nodes[idx as usize];
-        if node.total_weight < node.weight {
-            let mut sum = 0;
-            for c in node.children {
-//            let child_weight: u64 = node.children.iter().map(|c| {
-//                self.set_weights(*c);
-                sum += self.nodes[c].total_weight
+    let component = contents.split("\n").map(|line| {
+        let ports = line.split("/").map(|str| { str.parse::<usize>().unwrap() })
+            .collect::<Vec<_>>();
+        (ports[0], ports[1])
+    })
+        .enumerate()
+        .for_each(|(i, (p1, p2))| {
+            id_map.insert(i, (p1, p2));
+            if port_map.contains_key(&p1) {
+                port_map.get_mut(&p1).unwrap().push((i, p2));
+            } else {
+                port_map.insert(p1, vec![(i, p2)]);
             }
 
-            self.nodes[idx as usize].total_weight = node.weight + sum;
-        }
-    }
-
-    fn count_group_size(idx: usize) -> u32 {
-        let mut visited = HashSet::new();
-        let mut unvisited = vec![idx];
-        while !unvisited.is_empty() {
-            let next = unvisited.
-            visited.insert()
-        }
-    }
-}
-
-fn construct_graph(input: &String) -> (Graph, HashMap<String, usize>) {
-    let mut nodes = HashMap::new();
-    let mut graph = Graph { nodes: vec![], root: 0 };
-    let mut temp_children = HashMap::new();
-    let mut indices = HashSet::new();
-
-    input.split("\n").filter(|x| x.len() > 0).for_each(|line| {
-        let mut children = Vec::new();
-        let mut idx = 0;
-        let mut node_idx = 0;
-        line.split_whitespace().for_each(|item| {
-            match idx {
-                0 => {
-                    node_idx = graph.nodes.len();
-                    graph.nodes.push(Node { children: vec![], name: item.to_string(), weight: 0, total_weight: 0, balanced: false });
-                    nodes.insert(item.to_string(), node_idx);
-                    indices.insert(node_idx);
-                }
-//                1 => {
-//                    graph.nodes[node_idx].weight = item[1..(item.len() - 1)].parse::<u64>().unwrap();
-//                }
-                1 => {}
-                _ => {
-                    let child = if (*item).to_string().as_bytes()[(item.len() - 1)] == ',' as u8 {
-                        item[0..(item.len() - 1)].to_string().trim().to_string()
-                    } else {
-                        item[..].to_string().trim().to_string()
-                    };
-                    children.push(child);
-                }
+            if port_map.contains_key(&p2) {
+                port_map.get_mut(&p2).unwrap().push((i, p1));
+            } else {
+                port_map.insert(p2, vec![(i, p1)]);
             }
-            idx += 1;
         });
-        temp_children.insert(node_idx, children);
-    });
-    // rebuild child links
-    temp_children.iter().for_each(|(idx, children)| {
-        let node = &mut graph.nodes[*idx];
-        (*node).children = children.iter().map(|s| {
-            let r = *nodes.get(s).unwrap();
-            indices.remove(&r);
-            r
-        }).collect();
-    });
-    graph.root = *indices.iter().next().unwrap();
-    (graph, nodes)
+
+    let mut sorted = port_map.clone().into_iter().collect::<Vec<_>>();
+    sorted.sort();
+    for x in sorted {
+        println!("{:?}", x);
+    }
+    println!("{:?}", id_map);
+
+    let state = State { port_map, id_map: id_map.clone() };
+    let (max, maxState) = state.recurse(&mut BitSet::new(), 0);
+
+    let ms = maxState.iter().map(|i| id_map.get(i).unwrap().clone())
+        .collect::<Vec<_>>();
+    println!("max State: {:?}", maxState);
+    println!("max ports: {:?}", ms);
+    println!("max: {}", max);
 }
 
-#[test]
-fn graph_test() {
-    let mut g = construct_graph(&"0 <-> 2
-1 <-> 1
-2 <-> 0, 3, 4
-3 <-> 2, 4
-4 <-> 2, 3, 6
-5 <-> 6
-6 <-> 4, 5".to_string());
-    assert_eq!(g.nodes[g.root].name, "tknk".to_string());
-    assert_eq!(g.find_unbalanced_child(), ("ugml".to_string(), 60));
+struct State {
+    port_map: HashMap<usize, Vec<(usize, usize)>>,
+    id_map: HashMap<usize, (usize, usize)>,
 }
+
+impl State {
+    fn recurse(&self, state: &mut BitSet, node: usize) -> (usize, Vec<usize>) {
+//        println!("considering {}", node);
+        let nodes = self.port_map.get(&node).map(|x| x.clone()).unwrap_or_else(|| { vec![] })
+            .into_iter()
+            .filter(|(i, p)| { !state.contains(*i) })
+            .collect::<Vec<_>>();
+        let mut max = 0;
+        let mut max_i = -1;
+        let mut maxState = vec![];
+        for (i, p) in nodes {
+            state.insert(i);
+            let (c, c_state) = self.recurse(state, p);
+            if c > max {
+                max = c;
+                max_i = i as i32;
+                maxState = c_state;
+            }
+            state.remove(i);
+        }
+        if max_i >= 0 {
+            maxState.push(max_i as usize);
+            max += node;
+        }
+        (max + node, maxState)
+    }
+}
+
