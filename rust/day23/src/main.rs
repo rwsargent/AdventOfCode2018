@@ -35,7 +35,7 @@ fn main3() {
     let mut h: i64 = 0;
 
 
-    while b != c {
+    while b <= c {
         println!("loop");
         f = 1;
         d = 2;
