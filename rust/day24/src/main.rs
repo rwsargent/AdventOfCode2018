@@ -56,18 +56,21 @@ fn main() {
     println!("{:?}", id_map);
 
     let state = State { port_map, id_map: id_map.clone() };
-    let (max, maxState) = state.recurse(&mut BitSet::new(), 0);
+    let (max, maxState) = state.recurse_len(&mut BitSet::new(), 0);
 
     let ms = maxState.iter().map(|i| id_map.get(i).unwrap().clone())
         .collect::<Vec<_>>();
     println!("max State: {:?}", maxState);
     println!("max ports: {:?}", ms);
     println!("max: {}", max);
+    let m: usize = ms.clone().iter().map(|(l, r)| l + r).sum();
+    println!("m: {}", m);
+    println!("len: {}", ms.len());
 }
 
 struct State {
     port_map: HashMap<usize, Vec<(usize, usize)>>,
-    id_map: HashMap<usize, (usize, usize)>,
+    id_map: HashMap<usize, (usize, usize)>
 }
 
 impl State {
@@ -95,6 +98,30 @@ impl State {
             max += node;
         }
         (max + node, maxState)
+    }
+    fn recurse_len(&self, state: &mut BitSet, node: usize) -> (usize, Vec<usize>) {
+        let nodes = self.port_map.get(&node).map(|x| x.clone()).unwrap_or_else(|| { vec![] })
+            .into_iter()
+            .filter(|(i, p)| { !state.contains(*i) })
+            .collect::<Vec<_>>();
+        let mut max = 0;
+        let mut max_i = -1;
+        let mut max_path = vec![];
+        for (i, p) in nodes {
+            state.insert(i);
+            let (c, c_path) = self.recurse_len(state, p);
+            if c_path.len() > max_path.len() || (c_path.len() == max_path.len() && c > max) {
+                max = c;
+                max_i = i as i32;
+                max_path = c_path;
+            }
+            state.remove(i);
+        }
+        if max_i >= 0 {
+            max_path.push(max_i as usize);
+            max += node;
+        }
+        (max + node, max_path)
     }
 }
 
