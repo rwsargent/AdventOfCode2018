@@ -4,3 +4,10 @@
 target
 .DS_Store
 scala/out
+
+#rust
+rust/target/
+Cargo.lock
+
+#backup rust files
+**/*.rs.bk 
