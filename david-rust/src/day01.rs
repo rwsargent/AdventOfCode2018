@@ -3,9 +3,9 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 
-use utils;
+use utils::*;
 
-pub fn adjust_frequency(file: String) -> utils::Result<i64> {
+pub fn adjust_frequency(file: String) -> PuzzleResult {
   let mut result = 0;
   let file = BufReader::new(File::open(file)?);
   for line in file.lines() {
@@ -16,11 +16,10 @@ pub fn adjust_frequency(file: String) -> utils::Result<i64> {
       result += line.parse::<i64>()?;
     }
   }
-  println!("frequency: {}", result);
-  Ok(result)
+  Ok(PuzzleSolution::Day01(result))
 }
 
-pub fn find_duplicate_frequency(file: String) -> utils::Result<i64> {
+pub fn find_duplicate_frequency(file: String) -> PuzzleResult {
   let mut result = 0;
   let file = BufReader::new(File::open(file)?);
   let mut nums = Vec::new();
@@ -40,11 +39,9 @@ pub fn find_duplicate_frequency(file: String) -> utils::Result<i64> {
     for x in nums.iter() {
       result += x;
       if !already_seen.insert(result) {
-        println!("duplicate frequency: {} after {}", result, already_seen.len());
-        should_continue = false;
-        break;
+        return Ok(PuzzleSolution::Day01(result));
       }
     }
   }
-  Ok(result)
+  Err(Box::new(InvalidInput))
 }
