@@ -24,4 +24,14 @@ impl Input {
         
         nums
     }
+
+    pub fn as_strings(&self) -> Vec<String> {
+        let mut strs: Vec<String> = Vec::new();
+        let f = BufReader::new(&self.file);
+        for line in f.lines() {
+            strs.push(line.unwrap());
+        }
+        
+        strs
+    }
 }
