@@ -1,3 +1,6 @@
+extern crate regex;
+#[macro_use] extern crate lazy_static;
+
 mod days;
 mod util;
 use std::env;
@@ -12,6 +15,7 @@ fn main() {
     match day.as_ref() {
         "day01" => days::day01::run(),
         "day02" => days::day02::run(),
+        "day03" => days::day03::run(),
         x => println!("Unknown day {}.", x)
     }
 }

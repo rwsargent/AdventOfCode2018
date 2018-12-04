@@ -1,7 +1,6 @@
 use std::path::Path;
 use std::fs::File;
-use std::io::BufReader;
-use std::io::BufRead;
+use std::io::{self, BufRead, BufReader};
 
 pub struct Input {
     file: File,
@@ -33,5 +32,9 @@ impl Input {
         }
         
         strs
+    }
+
+    pub fn string_iter(&self) -> io::Lines<io::BufReader<&File>> {
+        io::BufReader::new(&self.file).lines()
     }
 }
