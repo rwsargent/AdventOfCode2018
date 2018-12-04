@@ -1,6 +1,7 @@
 const fs = require('fs') 
 
-let input = fs.readFileSync('./input.txt', 'utf8').split('\n') 
+// let input = fs.readFileSync(__dirname + '/test.txt', 'utf8').split('\n') 
+let input = fs.readFileSync(__dirname + '/input.txt', 'utf8').split('\n') 
 
 let max_x = 0
 let max_y = 0
@@ -18,20 +19,17 @@ let claims = input.map(function(val) {
     let x = row.x + row.w
     if(x > max_x) {
         max_x = x
-        console.log(max_x, max_y)
     }
     let y = row.y + row.h
     if(y > max_y) {
         max_y = y
-        console.log(max_x, max_y)
     }
 
     return row 
 })
+// console.log('first claim:', input[0], 'x:', max_x, 'y:', max_y)
 
-console.log('i', input[0], 'x', max_x, 'y', max_y)
-
-let fabric = new Array(max_x).fill( new Array(max_y).fill('.') )
+let fabric = new Array(max_x).fill(null).map(v => new Array(max_y).fill(null).map(v => '.'))
 for(let claim of claims) {
     for(var x = claim.x; x < claim.x + claim.w; x++) {
         for(var y = claim.y; y < claim.y + claim.h; y++) {
@@ -44,11 +42,11 @@ for(let claim of claims) {
     }
 }
 
-let answer = fabric.reduce(function(total, val) {
-    return total += val.reduce(function(row_sum, val) {
-        if(val === 'x') row_sum++
+let answer = fabric.reduce(function(total, x) {
+    return total += x.reduce(function(row_sum, y) {
+        if(y === 'x') row_sum++
         return row_sum
     }, 0) 
 }, 0)
-
 console.log(answer)
+// console.log(fabric)
