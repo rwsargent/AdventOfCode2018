@@ -1,7 +1,7 @@
 const fs = require('fs') 
 
-let input = fs.readFileSync(__dirname + '/test.txt', 'utf8').trim()
-// let input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim()
+// let input = fs.readFileSync(__dirname + '/test.txt', 'utf8').trim()
+let input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim()
 input = input.split('')
 
 input = input.reduce(function(acc, curr) {
