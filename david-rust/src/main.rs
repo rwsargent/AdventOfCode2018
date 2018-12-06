@@ -18,10 +18,10 @@ fn main() {
 fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
   match day {
     "1" | "1a" => {
-      day01::adjust_frequency(args[0].clone())
+      day01::adjust_frequency(CachedStringInput::fromFile(args[0].clone())?)
     }
     "1b" => {
-      day01::find_duplicate_frequency(args[0].clone())
+      day01::find_duplicate_frequency(CachedStringInput::fromFile(args[0].clone())?)
     }
     "2" | "2a" => {
       day02::checksum(args[0].clone())
