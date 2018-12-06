@@ -22,3 +22,8 @@ pub fn part_two() -> i32 {
         }
     }
 }
+
+pub fn run() {
+    println!("Part 1: {}", part_one());
+    println!("Part 2: {}", part_two());
+}

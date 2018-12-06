@@ -1,7 +1,6 @@
 use std::path::Path;
 use std::fs::File;
-use std::io::BufReader;
-use std::io::BufRead;
+use std::io::{self, BufRead, BufReader};
 
 pub struct Input {
     file: File,
@@ -23,5 +22,19 @@ impl Input {
         }
         
         nums
+    }
+
+    pub fn as_strings(&self) -> Vec<String> {
+        let mut strs: Vec<String> = Vec::new();
+        let f = BufReader::new(&self.file);
+        for line in f.lines() {
+            strs.push(line.unwrap());
+        }
+        
+        strs
+    }
+
+    pub fn string_iter(&self) -> io::Lines<io::BufReader<&File>> {
+        io::BufReader::new(&self.file).lines()
     }
 }
