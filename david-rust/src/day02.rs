@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use utils::*;
 
 pub fn checksum(path: String) -> PuzzleResult {
-  let file = InputFile::new(path)?;
+  let file = CachedStringInput::fromFile(path)?;
   let mut has_2_chars = 0;
   let mut has_3_chars = 0;
   for line in file.lines() {
@@ -31,7 +31,7 @@ pub fn checksum(path: String) -> PuzzleResult {
 }
 
 pub fn correct_common_letters(path: String) -> PuzzleResult {
-  let file = InputFile::new(path)?;
+  let file = CachedStringInput::fromFile(path)?;
   for line in file.lines() {
     for line2 in file.lines() {
       let dist = distance(line, line2);
@@ -46,7 +46,7 @@ pub fn correct_common_letters(path: String) -> PuzzleResult {
       }
     }
   }
-  Err(Box::new(InvalidInput))
+  Err(Box::new(CouldNotFindSolution))
 }
 
 // will return the number of characters that do not match

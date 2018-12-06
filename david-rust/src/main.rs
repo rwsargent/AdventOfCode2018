@@ -1,9 +1,12 @@
+extern crate regex;
+
 use std::env;
 
 use utils::*;
 
 mod day01;
 mod day02;
+mod day03;
 mod utils;
 
 fn main() {
@@ -26,6 +29,12 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     "2b" => {
       day02::correct_common_letters(args[0].clone())
     }
+    "3" | "3a" => {
+      day03::count_overlapping_squares(CachedStringInput::fromFile(args[0].clone())?)
+    }
+    "3b" => {
+      day03::find_nonoverlapping_claim(CachedStringInput::fromFile(args[0].clone())?)
+    }
     x => {
       Err(Box::new(InvalidDay))
     }
@@ -37,12 +46,32 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
 mod test {
   use super::*;
 
+  #[test]
+  fn day03a() {
+    assert_eq!(day03::count_overlapping_squares(CachedStringInput::fromString(
+      "#1 @ 1,3: 4x4
+#2 @ 3,1: 4x4
+#3 @ 5,5: 2x2".to_string()
+    )).unwrap(), PuzzleSolution::Day03(4));
+  }
+
+  #[test]
+  fn day03b() {
+    assert_eq!(day03::find_nonoverlapping_claim(CachedStringInput::fromString(
+      "#1 @ 1,3: 4x4
+#2 @ 3,1: 4x4
+#3 @ 5,5: 2x2".to_string()
+    )).unwrap(), PuzzleSolution::Day03(3));
+  }
+
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {
     vec![
       ("1a", vec!["data/day01.txt".to_string()], PuzzleSolution::Day01(533)),
       ("1b", vec!["data/day01.txt".to_string()], PuzzleSolution::Day01(73272)),
       ("2a", vec!["data/day02.txt".to_string()], PuzzleSolution::Day02a(8820)),
-      ("2b", vec!["data/day02.txt".to_string()], PuzzleSolution::Day02b("bpacnmglhizqygfsjixtkwudr".to_string()))
+      ("2b", vec!["data/day02.txt".to_string()], PuzzleSolution::Day02b("bpacnmglhizqygfsjixtkwudr".to_string())),
+      ("3a", vec!["data/day03.txt".to_string()], PuzzleSolution::Day03(113576)),
+      ("3b", vec!["data/day03.txt".to_string()], PuzzleSolution::Day03(825)),
     ]
   }
 

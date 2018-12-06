@@ -43,5 +43,5 @@ pub fn find_duplicate_frequency(file: String) -> PuzzleResult {
       }
     }
   }
-  Err(Box::new(InvalidInput))
+  Err(Box::new(CouldNotFindSolution))
 }
