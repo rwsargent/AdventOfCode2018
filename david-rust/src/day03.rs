@@ -65,7 +65,7 @@ pub fn count_overlapping_squares(input: StringInput) -> PuzzleResult {
     }
   }
 
-  Ok(PuzzleSolution::Day03(count))
+  Ok(PuzzleSolution::usize(count))
 }
 
 pub fn find_nonoverlapping_claim(input: StringInput) -> PuzzleResult {
@@ -93,6 +93,6 @@ pub fn find_nonoverlapping_claim(input: StringInput) -> PuzzleResult {
     }
   }
 
-  Ok(PuzzleSolution::Day03(free_claims.into_iter().next().ok_or(CouldNotFindSolution)?))
+  Ok(PuzzleSolution::usize(free_claims.into_iter().next().ok_or(CouldNotFindSolution)?))
 }
 

@@ -20,7 +20,7 @@ fn get_nums(input: StringInput) -> Result<Vec<i64>> {
 
 pub fn adjust_frequency(input: StringInput) -> PuzzleResult {
   let result = (get_nums(input)?).iter().sum();
-  Ok(PuzzleSolution::Day01(result))
+  Ok(PuzzleSolution::i64(result))
 }
 
 pub fn find_duplicate_frequency(input: StringInput) -> PuzzleResult {
@@ -33,7 +33,7 @@ pub fn find_duplicate_frequency(input: StringInput) -> PuzzleResult {
     for x in nums.iter() {
       result += x;
       if !already_seen.insert(result) {
-        return Ok(PuzzleSolution::Day01(result));
+        return Ok(PuzzleSolution::i64(result));
       }
     }
   }

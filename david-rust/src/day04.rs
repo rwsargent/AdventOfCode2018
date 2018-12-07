@@ -71,7 +71,7 @@ pub fn most_asleep_guard(input: StringInput) -> PuzzleResult {
 
   let guard = guards.iter().max_by_key(|g| g.minutes_asleep).unwrap();
 
-  Ok(PuzzleSolution::Day04(guard.id * guard.most_asleep_minute))
+  Ok(PuzzleSolution::usize(guard.id * guard.most_asleep_minute))
 }
 
 pub fn most_asleep_minute(input: StringInput) -> PuzzleResult {
@@ -84,7 +84,7 @@ pub fn most_asleep_minute(input: StringInput) -> PuzzleResult {
 
   let guard = guards.iter().max_by_key(|g| g.minutes_asleep).unwrap();
 
-  Ok(PuzzleSolution::Day04(guard.id * guard.most_asleep_minute))
+  Ok(PuzzleSolution::usize(guard.id * guard.most_asleep_minute))
 }
 
 #[derive(Debug)]

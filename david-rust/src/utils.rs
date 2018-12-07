@@ -12,11 +12,10 @@ pub type PuzzleResult = Result<PuzzleSolution>;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PuzzleSolution {
-  Day01(i64),
-  Day02a(u64),
-  Day02b(String),
-  Day03(usize),
-  Day04(usize),
+  i64(i64),
+  u64(u64),
+  String(String),
+  usize(usize),
 }
 
 #[derive(Debug)]

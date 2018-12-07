@@ -27,7 +27,7 @@ pub fn checksum(path: String) -> PuzzleResult {
   }
 
   let result = has_2_chars * has_3_chars;
-  Ok(PuzzleSolution::Day02a(result))
+  Ok(PuzzleSolution::u64(result))
 }
 
 pub fn correct_common_letters(path: String) -> PuzzleResult {
@@ -42,7 +42,7 @@ pub fn correct_common_letters(path: String) -> PuzzleResult {
             result.push(l);
           }
         }
-        return Ok(PuzzleSolution::Day02b(result));
+        return Ok(PuzzleSolution::String(result));
       }
     }
   }
