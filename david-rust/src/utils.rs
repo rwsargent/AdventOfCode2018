@@ -16,6 +16,7 @@ pub enum PuzzleSolution {
   Day02a(u64),
   Day02b(String),
   Day03(usize),
+  Day04(usize),
 }
 
 #[derive(Debug)]
@@ -26,6 +27,19 @@ impl error::Error for InvalidInput {}
 impl fmt::Display for InvalidInput {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     write!(f, "Input file defied expectations")
+  }
+}
+
+#[derive(Debug)]
+pub struct InvalidLine {
+  pub line: String
+}
+
+impl error::Error for InvalidLine {}
+
+impl fmt::Display for InvalidLine {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "Input line defied expectations {}", self.line)
   }
 }
 
@@ -51,24 +65,24 @@ impl fmt::Display for InvalidDay {
   }
 }
 
-pub struct CachedStringInput {
+pub struct StringInput {
   pub path: String,
   pub content: String,
 }
 
-impl CachedStringInput {
-  pub fn fromFile(path: String) -> Result<CachedStringInput> {
+impl StringInput {
+  pub fn fromFile(path: String) -> Result<StringInput> {
     let mut file = File::open(path.clone())?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
-    Ok(CachedStringInput {
+    Ok(StringInput {
       path,
       content,
     })
   }
 
-  pub fn fromString(content: String) -> CachedStringInput {
-    CachedStringInput {
+  pub fn fromString(content: String) -> StringInput {
+    StringInput {
       path: "".to_string(),
       content,
     }

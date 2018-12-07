@@ -23,7 +23,7 @@ struct Point {
   y: usize,
 }
 
-fn get_claims(input: CachedStringInput) -> Result<Vec<Claim>> {
+fn get_claims(input: StringInput) -> Result<Vec<Claim>> {
   let mut claims = vec![];
 
   let re = Regex::new(r"#(\d+) @ (\d+),(\d+): (\d+)x(\d+)")?;
@@ -46,7 +46,7 @@ fn get_claims(input: CachedStringInput) -> Result<Vec<Claim>> {
   Ok(claims)
 }
 
-pub fn count_overlapping_squares(input: CachedStringInput) -> PuzzleResult {
+pub fn count_overlapping_squares(input: StringInput) -> PuzzleResult {
   let claims = get_claims(input)?;
 
   let mut count = 0;
@@ -68,7 +68,7 @@ pub fn count_overlapping_squares(input: CachedStringInput) -> PuzzleResult {
   Ok(PuzzleSolution::Day03(count))
 }
 
-pub fn find_nonoverlapping_claim(input: CachedStringInput) -> PuzzleResult {
+pub fn find_nonoverlapping_claim(input: StringInput) -> PuzzleResult {
   let claims = get_claims(input)?;
 
   let mut free_claims = HashSet::new();
