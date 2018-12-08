@@ -9,6 +9,7 @@ mod day02;
 mod day03;
 mod day04;
 mod day05;
+mod day06;
 mod utils;
 
 fn main() {
@@ -49,6 +50,12 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     "5b" => {
       day05::react_smallest(StringInput::fromFile(args[0].clone())?)
     }
+    "6" | "6a" => {
+      day06::largest_finite(StringInput::fromFile(args[0].clone())?)
+    }
+    "6b" => {
+      day06::total_distance_under(StringInput::fromFile(args[0].clone())?, args[1].parse()?)
+    }
     x => {
       Err(Box::new(InvalidDay))
     }
@@ -76,6 +83,30 @@ mod test {
 #2 @ 3,1: 4x4
 #3 @ 5,5: 2x2".to_string()
     )).unwrap(), PuzzleSolution::usize(3));
+  }
+
+  #[test]
+  fn day06a() {
+    assert_eq!(day06::largest_finite(StringInput::fromString(
+      "1, 1
+1, 6
+8, 3
+3, 4
+5, 5
+8, 9".to_string()
+    )).unwrap(), PuzzleSolution::usize(17));
+  }
+
+  #[test]
+  fn day06b() {
+    assert_eq!(day06::total_distance_under(StringInput::fromString(
+      "1, 1
+1, 6
+8, 3
+3, 4
+5, 5
+8, 9".to_string()
+    ), 32).unwrap(), PuzzleSolution::usize(16));
   }
 
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {

@@ -121,3 +121,15 @@ impl<T: Clone> ExpandableMatrix<T> {
     vec.get_mut(x).unwrap()
   }
 }
+
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
+pub struct Point {
+  pub x: i64,
+  pub y: i64,
+}
+
+impl Point {
+  pub fn manhattan_dist(&self, other: &Point) -> i64 {
+    (self.x - other.x).abs() + (self.y - other.y).abs()
+  }
+}
