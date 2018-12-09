@@ -5,33 +5,27 @@ use std::io::BufReader;
 
 use utils::*;
 
-pub fn adjust_frequency(file: String) -> PuzzleResult {
-  let mut result = 0;
-  let file = BufReader::new(File::open(file)?);
-  for line in file.lines() {
-    let line = line?;
+fn get_nums(input: StringInput) -> Result<Vec<i64>> {
+  let lines = input.lines();
+  let mut result = Vec::with_capacity(lines.len());
+  for line in input.lines() {
     if line.starts_with("+") {
-      result += line.chars().skip(1).collect::<String>().parse::<i64>()?;
+      result.push(line.chars().skip(1).collect::<String>().parse::<i64>()?);
     } else {
-      result += line.parse::<i64>()?;
+      result.push(line.parse::<i64>()?);
     }
   }
-  Ok(PuzzleSolution::Day01(result))
+  Ok(result)
 }
 
-pub fn find_duplicate_frequency(file: String) -> PuzzleResult {
+pub fn adjust_frequency(input: StringInput) -> PuzzleResult {
+  let result = (get_nums(input)?).iter().sum();
+  Ok(PuzzleSolution::i64(result))
+}
+
+pub fn find_duplicate_frequency(input: StringInput) -> PuzzleResult {
   let mut result = 0;
-  let file = BufReader::new(File::open(file)?);
-  let mut nums = Vec::new();
-  for line in file.lines() {
-    let line = line?;
-    let x = if line.starts_with("+") {
-      line.chars().skip(1).collect::<String>().parse::<i64>()?
-    } else {
-      line.parse::<i64>()?
-    };
-    nums.push(x);
-  }
+  let mut nums = get_nums(input)?;
   let mut already_seen = HashSet::new();
   already_seen.insert(result);
   let mut should_continue = true;
@@ -39,9 +33,9 @@ pub fn find_duplicate_frequency(file: String) -> PuzzleResult {
     for x in nums.iter() {
       result += x;
       if !already_seen.insert(result) {
-        return Ok(PuzzleSolution::Day01(result));
+        return Ok(PuzzleSolution::i64(result));
       }
     }
   }
-  Err(Box::new(InvalidInput))
+  Err(Box::new(CouldNotFindSolution))
 }

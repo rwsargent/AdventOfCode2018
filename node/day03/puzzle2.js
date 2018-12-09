@@ -27,20 +27,26 @@ let claims = input.map(function(val) {
 
     return row 
 })
-// console.log('first claim:', input[0], 'x:', max_x, 'y:', max_y)
+console.log('first claim:', input[0], 'x:', max_x, 'y:', max_y)
 
 let fabric = new Array(max_x).fill(null).map(v => new Array(max_y).fill(null).map(v => '.'))
+let ids = {}
 for(let claim of claims) {
+    ids[claim.id] = true
     for(var x = claim.x; x < claim.x + claim.w; x++) {
         for(var y = claim.y; y < claim.y + claim.h; y++) {
             if(fabric[x][y] === '.') {
                 fabric[x][y] = claim.id
             } else {
+                delete ids[claim.id] // eh this happens alot who cares
+                if(fabric[x][y] !== 'x') delete ids[fabric[x][y]] 
                 fabric[x][y] = 'x'
             }
         }
     }
 }
+console.log(ids)
+return 
 
 let answer = fabric.reduce(function(total, x) {
     return total += x.reduce(function(row_sum, y) {
