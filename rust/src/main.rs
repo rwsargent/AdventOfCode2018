@@ -1,5 +1,6 @@
 extern crate regex;
 #[macro_use] extern crate lazy_static;
+extern crate chrono;
 
 mod days;
 mod util;
@@ -16,6 +17,8 @@ fn main() {
         "day01" => days::day01::run(),
         "day02" => days::day02::run(),
         "day03" => days::day03::run(),
+        "day04" => days::day04::run(),
+        "day05" => days::day05::run(),
         x => println!("Unknown day {}.", x)
     }
 }

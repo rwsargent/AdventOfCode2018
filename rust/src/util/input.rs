@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
 
 pub struct Input {
     file: File,
@@ -14,6 +14,21 @@ pub fn get_input(path: &str) -> self::Input {
 }
 
 impl Input {
+    pub fn as_chars(&mut self) -> Vec<char> {
+        let buf = self.as_bytes();
+        String::from_utf8(buf)
+            .expect("from_utf8 failed")
+            .chars()
+            .collect()
+    }
+    
+    pub fn as_bytes(&mut self) -> Vec<u8> {
+        let mut buffer = Vec::new();
+        // read the whole file
+        &self.file.read_to_end(&mut buffer);
+        buffer
+    }
+    
     pub fn as_ints(&self) -> Vec<i32> {
         let mut nums: Vec<i32> = Vec::new();
         let f = BufReader::new(&self.file);
@@ -30,11 +45,6 @@ impl Input {
         for line in f.lines() {
             strs.push(line.unwrap());
         }
-        
         strs
-    }
-
-    pub fn string_iter(&self) -> io::Lines<io::BufReader<&File>> {
-        io::BufReader::new(&self.file).lines()
     }
 }

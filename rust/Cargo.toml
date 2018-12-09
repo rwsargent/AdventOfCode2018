@@ -6,3 +6,4 @@ authors = ["Ryan S <rwsarge@gmail.com>"]
 [dependencies]
 regex = "1"
 lazy_static = "1.2"
+chrono = "0.4.6"
