@@ -1,6 +1,8 @@
+use std::collections::HashMap;
 use std::error;
 use std::fmt;
 use std::fs::File;
+use std::hash::Hash;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Lines;
@@ -131,5 +133,23 @@ pub struct Point {
 impl Point {
   pub fn manhattan_dist(&self, other: &Point) -> i64 {
     (self.x - other.x).abs() + (self.y - other.y).abs()
+  }
+}
+
+pub struct MultiMap<K: Eq + Hash, V> {
+  map: HashMap<K, Vec<V>>
+}
+
+impl<K: Eq + Hash, V> MultiMap<K, V> {
+  pub fn new() -> MultiMap<K, V> {
+    MultiMap { map: HashMap::new() }
+  }
+
+  pub fn insert(&mut self, key: K, value: V) {
+    self.map.entry(key).or_insert(Vec::with_capacity(1)).push(value)
+  }
+
+  pub fn get(&self, key: &K) -> Option<&Vec<V>> {
+    self.map.get(key)
   }
 }
