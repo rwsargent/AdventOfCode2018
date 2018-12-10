@@ -9,6 +9,8 @@ mod day02;
 mod day03;
 mod day04;
 mod day05;
+mod day06;
+mod day07;
 mod utils;
 
 fn main() {
@@ -49,6 +51,18 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     "5b" => {
       day05::react_smallest(StringInput::fromFile(args[0].clone())?)
     }
+    "6" | "6a" => {
+      day06::largest_finite(StringInput::fromFile(args[0].clone())?)
+    }
+    "6b" => {
+      day06::total_distance_under(StringInput::fromFile(args[0].clone())?, args[1].parse()?)
+    }
+    "7" | "7a" => {
+      day07::get_execution_order(StringInput::fromFile(args[0].clone())?)
+    }
+    "7b" => {
+      day06::total_distance_under(StringInput::fromFile(args[0].clone())?, args[1].parse()?)
+    }
     x => {
       Err(Box::new(InvalidDay))
     }
@@ -78,6 +92,56 @@ mod test {
     )).unwrap(), PuzzleSolution::usize(3));
   }
 
+  #[test]
+  fn day06a() {
+    assert_eq!(day06::largest_finite(StringInput::fromString(
+      "1, 1
+1, 6
+8, 3
+3, 4
+5, 5
+8, 9".to_string()
+    )).unwrap(), PuzzleSolution::usize(17));
+  }
+
+  #[test]
+  fn day06b() {
+    assert_eq!(day06::total_distance_under(StringInput::fromString(
+      "1, 1
+1, 6
+8, 3
+3, 4
+5, 5
+8, 9".to_string()
+    ), 32).unwrap(), PuzzleSolution::usize(16));
+  }
+
+  #[test]
+  fn day07() {
+    assert_eq!(day07::get_execution_order(StringInput::fromString(
+      "Step C must be finished before step A can begin.
+Step C must be finished before step F can begin.
+Step A must be finished before step B can begin.
+Step A must be finished before step D can begin.
+Step B must be finished before step E can begin.
+Step D must be finished before step E can begin.
+Step F must be finished before step E can begin.".to_string()
+    )).unwrap(), PuzzleSolution::String("CABDFE".to_string()));
+  }
+
+  #[test]
+  fn day07b() {
+    assert_eq!(day07::get_execution_time(StringInput::fromString(
+      "Step C must be finished before step A can begin.
+Step C must be finished before step F can begin.
+Step A must be finished before step B can begin.
+Step A must be finished before step D can begin.
+Step B must be finished before step E can begin.
+Step D must be finished before step E can begin.
+Step F must be finished before step E can begin.".to_string()
+    ), 2, 0).unwrap(), PuzzleSolution::usize(15));
+  }
+
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {
     vec![
       ("1a", vec!["data/day01.txt".to_string()], PuzzleSolution::i64(533)),
@@ -90,6 +154,9 @@ mod test {
       ("4b", vec!["data/day04.txt".to_string()], PuzzleSolution::usize(51232)),
       ("5a", vec!["data/day05.txt".to_string()], PuzzleSolution::usize(10250)),
       ("5b", vec!["data/day05.txt".to_string()], PuzzleSolution::usize(6188)),
+      ("6a", vec!["data/day06.txt".to_string()], PuzzleSolution::usize(4186)),
+      ("6b", vec!["data/day06.txt".to_string(), "10000".to_string()], PuzzleSolution::usize(45509)),
+      ("7a", vec!["data/day07.txt".to_string()], PuzzleSolution::String("FMOXCDGJRAUIHKNYZTESWLPBQV".to_string()))
     ]
   }
 
