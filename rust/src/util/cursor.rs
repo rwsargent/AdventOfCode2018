@@ -1,14 +1,15 @@
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub struct Cursor {
     pub x : i32,
     pub y : i32,
 }
 
+#[derive(Copy, Clone)]
 pub struct Bounds {
-    left : i32, 
-    top : i32,
-    right : i32,
-    bottom : i32,
+    pub left : i32, 
+    pub top : i32,
+    pub right : i32,
+    pub bottom : i32,
 }
 
 
