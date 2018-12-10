@@ -10,14 +10,6 @@ struct Claim {
   end: Point,
 }
 
-impl Claim {
-  fn overlaps(&self, other: &Claim) -> bool {
-    // claims are overlapping if there is no space between any edges.
-    !((self.start.x >= other.end.x) || (other.start.x >= self.end.x) ||
-        (self.start.y >= other.end.y) || (other.start.y >= self.end.y))
-  }
-}
-
 struct Point {
   x: usize,
   y: usize,

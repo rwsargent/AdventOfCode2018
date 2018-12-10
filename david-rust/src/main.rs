@@ -22,10 +22,10 @@ fn main() {
 fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
   match day {
     "1" | "1a" => {
-      day01::adjust_frequency(StringInput::fromFile(args[0].clone())?)
+      day01::adjust_frequency(StringInput::from_file(args[0].clone())?)
     }
     "1b" => {
-      day01::find_duplicate_frequency(StringInput::fromFile(args[0].clone())?)
+      day01::find_duplicate_frequency(StringInput::from_file(args[0].clone())?)
     }
     "2" | "2a" => {
       day02::checksum(args[0].clone())
@@ -34,36 +34,36 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
       day02::correct_common_letters(args[0].clone())
     }
     "3" | "3a" => {
-      day03::count_overlapping_squares(StringInput::fromFile(args[0].clone())?)
+      day03::count_overlapping_squares(StringInput::from_file(args[0].clone())?)
     }
     "3b" => {
-      day03::find_nonoverlapping_claim(StringInput::fromFile(args[0].clone())?)
+      day03::find_nonoverlapping_claim(StringInput::from_file(args[0].clone())?)
     }
     "4" | "4a" => {
-      day04::most_asleep_guard(StringInput::fromFile(args[0].clone())?)
+      day04::most_asleep_guard(StringInput::from_file(args[0].clone())?)
     }
     "4b" => {
-      day04::most_asleep_minute(StringInput::fromFile(args[0].clone())?)
+      day04::most_asleep_minute(StringInput::from_file(args[0].clone())?)
     }
     "5" | "5a" => {
-      day05::react(StringInput::fromFile(args[0].clone())?)
+      day05::react(StringInput::from_file(args[0].clone())?)
     }
     "5b" => {
-      day05::react_smallest(StringInput::fromFile(args[0].clone())?)
+      day05::react_smallest(StringInput::from_file(args[0].clone())?)
     }
     "6" | "6a" => {
-      day06::largest_finite(StringInput::fromFile(args[0].clone())?)
+      day06::largest_finite(StringInput::from_file(args[0].clone())?)
     }
     "6b" => {
-      day06::total_distance_under(StringInput::fromFile(args[0].clone())?, args[1].parse()?)
+      day06::total_distance_under(StringInput::from_file(args[0].clone())?, args[1].parse()?)
     }
     "7" | "7a" => {
-      day07::get_execution_order(StringInput::fromFile(args[0].clone())?)
+      day07::get_execution_order(StringInput::from_file(args[0].clone())?)
     }
     "7b" => {
-      day06::total_distance_under(StringInput::fromFile(args[0].clone())?, args[1].parse()?)
+      day07::get_execution_time(StringInput::from_file(args[0].clone())?, args[1].parse()?, args[2].parse()?)
     }
-    x => {
+    _ => {
       Err(Box::new(InvalidDay))
     }
   }
@@ -76,7 +76,7 @@ mod test {
 
   #[test]
   fn day03a() {
-    assert_eq!(day03::count_overlapping_squares(StringInput::fromString(
+    assert_eq!(day03::count_overlapping_squares(StringInput::from_string(
       "#1 @ 1,3: 4x4
 #2 @ 3,1: 4x4
 #3 @ 5,5: 2x2".to_string()
@@ -85,7 +85,7 @@ mod test {
 
   #[test]
   fn day03b() {
-    assert_eq!(day03::find_nonoverlapping_claim(StringInput::fromString(
+    assert_eq!(day03::find_nonoverlapping_claim(StringInput::from_string(
       "#1 @ 1,3: 4x4
 #2 @ 3,1: 4x4
 #3 @ 5,5: 2x2".to_string()
@@ -94,7 +94,7 @@ mod test {
 
   #[test]
   fn day06a() {
-    assert_eq!(day06::largest_finite(StringInput::fromString(
+    assert_eq!(day06::largest_finite(StringInput::from_string(
       "1, 1
 1, 6
 8, 3
@@ -106,7 +106,7 @@ mod test {
 
   #[test]
   fn day06b() {
-    assert_eq!(day06::total_distance_under(StringInput::fromString(
+    assert_eq!(day06::total_distance_under(StringInput::from_string(
       "1, 1
 1, 6
 8, 3
@@ -118,7 +118,7 @@ mod test {
 
   #[test]
   fn day07() {
-    assert_eq!(day07::get_execution_order(StringInput::fromString(
+    assert_eq!(day07::get_execution_order(StringInput::from_string(
       "Step C must be finished before step A can begin.
 Step C must be finished before step F can begin.
 Step A must be finished before step B can begin.
@@ -131,7 +131,7 @@ Step F must be finished before step E can begin.".to_string()
 
   #[test]
   fn day07b() {
-    assert_eq!(day07::get_execution_time(StringInput::fromString(
+    assert_eq!(day07::get_execution_time(StringInput::from_string(
       "Step C must be finished before step A can begin.
 Step C must be finished before step F can begin.
 Step A must be finished before step B can begin.
@@ -156,7 +156,8 @@ Step F must be finished before step E can begin.".to_string()
       ("5b", vec!["data/day05.txt".to_string()], PuzzleSolution::usize(6188)),
       ("6a", vec!["data/day06.txt".to_string()], PuzzleSolution::usize(4186)),
       ("6b", vec!["data/day06.txt".to_string(), "10000".to_string()], PuzzleSolution::usize(45509)),
-      ("7a", vec!["data/day07.txt".to_string()], PuzzleSolution::String("FMOXCDGJRAUIHKNYZTESWLPBQV".to_string()))
+      ("7a", vec!["data/day07.txt".to_string()], PuzzleSolution::String("FMOXCDGJRAUIHKNYZTESWLPBQV".to_string())),
+      ("7b", vec!["data/day07.txt".to_string(), "5".to_string(), "60".to_string()], PuzzleSolution::usize(1053))
     ]
   }
 

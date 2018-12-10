@@ -1,7 +1,4 @@
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::BufRead;
-use std::io::BufReader;
 
 use utils::*;
 
@@ -25,11 +22,10 @@ pub fn adjust_frequency(input: StringInput) -> PuzzleResult {
 
 pub fn find_duplicate_frequency(input: StringInput) -> PuzzleResult {
   let mut result = 0;
-  let mut nums = get_nums(input)?;
+  let nums = get_nums(input)?;
   let mut already_seen = HashSet::new();
   already_seen.insert(result);
-  let mut should_continue = true;
-  while should_continue {
+  loop {
     for x in nums.iter() {
       result += x;
       if !already_seen.insert(result) {
@@ -37,5 +33,4 @@ pub fn find_duplicate_frequency(input: StringInput) -> PuzzleResult {
       }
     }
   }
-  Err(Box::new(CouldNotFindSolution))
 }

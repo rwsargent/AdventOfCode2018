@@ -3,9 +3,6 @@ use std::error;
 use std::fmt;
 use std::fs::File;
 use std::hash::Hash;
-use std::io::BufRead;
-use std::io::BufReader;
-use std::io::Lines;
 use std::io::Read;
 use std::iter;
 
@@ -72,7 +69,7 @@ pub struct StringInput {
 }
 
 impl StringInput {
-  pub fn fromFile(path: String) -> Result<StringInput> {
+  pub fn from_file(path: String) -> Result<StringInput> {
     let mut file = File::open(path.clone())?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -82,7 +79,7 @@ impl StringInput {
     })
   }
 
-  pub fn fromString(content: String) -> StringInput {
+  pub fn from_string(content: String) -> StringInput {
     StringInput {
       path: "".to_string(),
       content,
@@ -97,7 +94,6 @@ impl StringInput {
 /// An expandable zero indexed matrix.
 pub struct ExpandableMatrix<T: Clone> {
   zero: T,
-  currentWidth: usize,
   data: Vec<Vec<T>>,
 }
 
@@ -105,7 +101,6 @@ impl<T: Clone> ExpandableMatrix<T> {
   pub fn new(zero: T) -> ExpandableMatrix<T> {
     ExpandableMatrix {
       zero,
-      currentWidth: 0,
       data: vec![],
     }
   }
@@ -115,7 +110,7 @@ impl<T: Clone> ExpandableMatrix<T> {
       let num_extra = y - self.data.len() + 1;
       self.data.extend(iter::repeat(vec![]).take(num_extra));
     }
-    let mut vec = self.data.get_mut(y).unwrap();
+    let vec = self.data.get_mut(y).unwrap();
     if vec.len() <= x {
       let num_extra = x - vec.len() + 1;
       vec.extend(iter::repeat(self.zero.clone()).take(num_extra));
