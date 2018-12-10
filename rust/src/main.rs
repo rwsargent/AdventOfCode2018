@@ -19,6 +19,7 @@ fn main() {
         "day03" => days::day03::run(),
         "day04" => days::day04::run(),
         "day05" => days::day05::run(),
+        "day06" => days::day06::run(),
         x => println!("Unknown day {}.", x)
     }
 }
