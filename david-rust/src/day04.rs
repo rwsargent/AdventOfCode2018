@@ -63,9 +63,9 @@ fn get_guards(input: StringInput) -> Result<HashMap<usize, Vec<usize>>> {
 pub fn most_asleep_guard(input: StringInput) -> PuzzleResult {
   let guards = get_guards(input)?;
 
-  let mut guards: Vec<_> = guards.into_iter().map(|(id, hour)| {
+  let guards: Vec<_> = guards.into_iter().map(|(id, hour)| {
     let minutes_asleep = hour.iter().sum();
-    let max = hour.iter().enumerate().max_by_key(|(i, x)| *x).map(|(i, x)| i).unwrap_or(61);
+    let max = hour.iter().enumerate().max_by_key(|(_, x)| *x).map(|(i, _)| i).unwrap_or(61);
     Guard { id, minutes_asleep, most_asleep_minute: max }
   }).collect();
 
@@ -77,8 +77,8 @@ pub fn most_asleep_guard(input: StringInput) -> PuzzleResult {
 pub fn most_asleep_minute(input: StringInput) -> PuzzleResult {
   let guards = get_guards(input)?;
 
-  let mut guards: Vec<_> = guards.into_iter().map(|(id, hour)| {
-    let (minute, times_asleep) = hour.iter().enumerate().max_by_key(|(i, x)| *x).unwrap();
+  let guards: Vec<_> = guards.into_iter().map(|(id, hour)| {
+    let (minute, times_asleep) = hour.iter().enumerate().max_by_key(|(_, x)| *x).unwrap();
     Guard { id, minutes_asleep: *times_asleep, most_asleep_minute: minute }
   }).collect();
 

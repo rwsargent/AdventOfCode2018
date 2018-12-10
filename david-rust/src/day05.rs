@@ -2,7 +2,6 @@ use utils::*;
 
 pub fn react(input: StringInput) -> PuzzleResult {
   let mut target: Vec<char> = Vec::with_capacity(input.content.len());
-  let mut last_char = '.'; // something that is not a letter
   for c in input.content.chars() {
     match target.pop() {
       Some(last) => {
@@ -31,7 +30,7 @@ pub fn react_smallest(input: StringInput) -> PuzzleResult {
             result.push(x);
           }
         }
-        react(StringInput::fromString(result))
+        react(StringInput::from_string(result))
       })
       .min_by_key(|x| {
         match x {
