@@ -132,7 +132,7 @@ impl Point {
 }
 
 pub struct MultiMap<K: Eq + Hash, V> {
-  map: HashMap<K, Vec<V>>
+  pub map: HashMap<K, Vec<V>>
 }
 
 impl<K: Eq + Hash, V> MultiMap<K, V> {

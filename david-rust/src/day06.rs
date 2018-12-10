@@ -117,7 +117,7 @@ pub fn largest_finite(input: StringInput) -> PuzzleResult {
       match find_min_coordinate(&curr, &coordinates) {
         Some(closest) if closest == idx => {
           size += 1;
-          let neighboors: Vec<_> = vec![
+          let neighbors: Vec<_> = vec![
             Point { x: curr.x, y: curr.y + 1 },
             Point { x: curr.x, y: curr.y - 1 },
             Point { x: curr.x - 1, y: curr.y },
@@ -130,7 +130,7 @@ pub fn largest_finite(input: StringInput) -> PuzzleResult {
               .into_iter()
               .filter(|p| !considered.contains(&p))
               .collect();
-          for n in neighboors {
+          for n in neighbors {
             considered.insert(n.clone());
             queue.push(n);
           }

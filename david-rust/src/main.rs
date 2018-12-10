@@ -11,6 +11,7 @@ mod day04;
 mod day05;
 mod day06;
 mod day07;
+mod day08;
 mod utils;
 
 fn main() {
@@ -62,6 +63,9 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     }
     "7b" => {
       day07::get_execution_time(StringInput::from_file(args[0].clone())?, args[1].parse()?, args[2].parse()?)
+    }
+    "8" | "8a" => {
+      day08::count_metadata(StringInput::from_file(args[0].clone())?)
     }
     _ => {
       Err(Box::new(InvalidDay))
@@ -142,6 +146,13 @@ Step F must be finished before step E can begin.".to_string()
     ), 2, 0).unwrap(), PuzzleSolution::usize(15));
   }
 
+  #[test]
+  fn day08a() {
+    assert_eq!(day08::count_metadata(StringInput::from_string(
+      "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2".to_string()
+    )).unwrap(), PuzzleSolution::usize(138));
+  }
+
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {
     vec![
       ("1a", vec!["data/day01.txt".to_string()], PuzzleSolution::i64(533)),
@@ -157,7 +168,8 @@ Step F must be finished before step E can begin.".to_string()
       ("6a", vec!["data/day06.txt".to_string()], PuzzleSolution::usize(4186)),
       ("6b", vec!["data/day06.txt".to_string(), "10000".to_string()], PuzzleSolution::usize(45509)),
       ("7a", vec!["data/day07.txt".to_string()], PuzzleSolution::String("FMOXCDGJRAUIHKNYZTESWLPBQV".to_string())),
-      ("7b", vec!["data/day07.txt".to_string(), "5".to_string(), "60".to_string()], PuzzleSolution::usize(1053))
+      ("7b", vec!["data/day07.txt".to_string(), "5".to_string(), "60".to_string()], PuzzleSolution::usize(1053)),
+      ("8a", vec!["data/day08.txt".to_string()], PuzzleSolution::usize(37262))
     ]
   }
 

@@ -81,20 +81,28 @@ pub fn get_execution_time(input: StringInput, workers: usize, task_overhead: usi
   let mut workers = iter::repeat_with(|| Worker { finishes_at: 0, current_task: None }).take(workers).collect::<Vec<_>>();
   let (mut actions, dependencies) = get_actions_and_dependencies(input)?;
   let mut ordered = actions.clone().into_iter().collect::<Vec<_>>();
+  let mut t = dependencies.map.clone().into_iter().collect::<Vec<_>>();
+  t.sort_by_key(|x| x.0.clone());
+  let mut workers_free = workers.len();
+  ordered.sort();
   let mut time = 0;
   while !actions.is_empty() {
     let mut next_time = usize::max_value();
+    let mut finished_a_task = false;
     for worker in &mut workers {
       let mut next_task = None;
-      let mut completed_task = false;
-      match worker.current_task {
-        Some(ref task) => {
+      match worker.current_task.take() {
+        Some(task) => {
           if worker.finishes_at == time {
-            actions.remove(task);
+            actions.remove(&task);
+            workers_free += 1;
+            finished_a_task = true;
             next_task = get_next_task(&ordered, &actions, &dependencies);
-            completed_task = true;
-          } else if worker.finishes_at < next_time {
-            next_time = worker.finishes_at;
+          } else {
+            worker.current_task = Some(task);
+            if worker.finishes_at < next_time {
+              next_time = worker.finishes_at;
+            }
           }
         }
         None => {
@@ -104,20 +112,17 @@ pub fn get_execution_time(input: StringInput, workers: usize, task_overhead: usi
       match next_task {
         Some(task) => {
           let task = ordered.remove(task);
+          workers_free -= 1;
           worker.finishes_at = time + get_time_for_task(&task)? + task_overhead;
           worker.current_task = Some(task);
           if worker.finishes_at < next_time {
             next_time = worker.finishes_at;
           }
         }
-        None => {
-          if completed_task {
-            worker.current_task = None;
-          }
-        }
+        None => {}
       }
     }
-    if next_time != usize::max_value() {
+    if !finished_a_task && next_time != usize::max_value() {
       time = next_time;
     }
   }
