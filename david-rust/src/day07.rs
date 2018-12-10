@@ -29,6 +29,7 @@ pub fn get_execution_order(input: StringInput) -> PuzzleResult {
 
   let mut making_progress = true;
   while making_progress && completed.len() != size {
+    making_progress = false;
     let mut found_action = None;
     for (i, action) in ordered.iter().enumerate() {
       match dependencies.get(action) {
@@ -49,6 +50,8 @@ pub fn get_execution_order(input: StringInput) -> PuzzleResult {
         let action = ordered.remove(idx);
         result.push_str(&action);
         completed.insert(action);
+        making_progress = true;
+        found_action = None;
       }
       _ => {}
     }
