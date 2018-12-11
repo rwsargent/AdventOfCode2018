@@ -196,7 +196,7 @@ Step F must be finished before step E can begin.".to_string()
       ("8a", vec!["data/day08.txt".to_string()], PuzzleSolution::usize(37262)),
       ("8b", vec!["data/day08.txt".to_string()], PuzzleSolution::usize(20839)),
       ("9a", vec!["470".to_string(), "72170".to_string()], PuzzleSolution::usize(388024)),
-      ("9a", vec!["470".to_string(), "7217000".to_string()], PuzzleSolution::usize(388024)),
+      ("9b", vec!["470".to_string(), "7217000".to_string()], PuzzleSolution::usize(3180929875)),
     ]
   }
 
