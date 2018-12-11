@@ -12,6 +12,7 @@ mod day05;
 mod day06;
 mod day07;
 mod day08;
+mod day09;
 mod utils;
 
 fn main() {
@@ -66,6 +67,12 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     }
     "8" | "8a" => {
       day08::count_metadata(StringInput::from_file(args[0].clone())?)
+    }
+    "8b" => {
+      day08::count_value(StringInput::from_file(args[0].clone())?)
+    }
+    "9" | "9a" | "9b" => {
+      day09::marble_game_winner(args[0].parse()?, args[1].parse()?)
     }
     _ => {
       Err(Box::new(InvalidDay))
@@ -153,6 +160,23 @@ Step F must be finished before step E can begin.".to_string()
     )).unwrap(), PuzzleSolution::usize(138));
   }
 
+  #[test]
+  fn day08b() {
+    assert_eq!(day08::count_value(StringInput::from_string(
+      "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2".to_string()
+    )).unwrap(), PuzzleSolution::usize(66));
+  }
+
+  #[test]
+  fn day09a() {
+    assert_eq!(day09::marble_game_winner(9, 25).unwrap(), PuzzleSolution::usize(32));
+    assert_eq!(day09::marble_game_winner(10, 1618).unwrap(), PuzzleSolution::usize(8317));
+    assert_eq!(day09::marble_game_winner(13, 7999).unwrap(), PuzzleSolution::usize(146373));
+    assert_eq!(day09::marble_game_winner(17, 1104).unwrap(), PuzzleSolution::usize(2764));
+    assert_eq!(day09::marble_game_winner(21, 6111).unwrap(), PuzzleSolution::usize(54718));
+    assert_eq!(day09::marble_game_winner(30, 5807).unwrap(), PuzzleSolution::usize(37305));
+  }
+
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {
     vec![
       ("1a", vec!["data/day01.txt".to_string()], PuzzleSolution::i64(533)),
@@ -169,7 +193,10 @@ Step F must be finished before step E can begin.".to_string()
       ("6b", vec!["data/day06.txt".to_string(), "10000".to_string()], PuzzleSolution::usize(45509)),
       ("7a", vec!["data/day07.txt".to_string()], PuzzleSolution::String("FMOXCDGJRAUIHKNYZTESWLPBQV".to_string())),
       ("7b", vec!["data/day07.txt".to_string(), "5".to_string(), "60".to_string()], PuzzleSolution::usize(1053)),
-      ("8a", vec!["data/day08.txt".to_string()], PuzzleSolution::usize(37262))
+      ("8a", vec!["data/day08.txt".to_string()], PuzzleSolution::usize(37262)),
+      ("8b", vec!["data/day08.txt".to_string()], PuzzleSolution::usize(20839)),
+      ("9a", vec!["470".to_string(), "72170".to_string()], PuzzleSolution::usize(388024)),
+      ("9a", vec!["470".to_string(), "7217000".to_string()], PuzzleSolution::usize(388024)),
     ]
   }
 
