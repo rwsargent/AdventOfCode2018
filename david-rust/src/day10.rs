@@ -74,7 +74,6 @@ fn prev(stars: &mut Vec<Star>) {
 
 fn print_stars(stars: &Vec<Star>) {
   if let Some((min, max)) = bounds(stars) {
-    println!("bounds: {:?}", (min, max));
     let width = (max.x - min.x + 3) as usize;
     let height = (max.y - min.y + 3) as usize;
     let area = width * height;
@@ -89,7 +88,6 @@ fn print_stars(stars: &Vec<Star>) {
     for star in stars {
       let x = (star.pos.x - min.x) as usize;
       let y = (star.pos.y - min.y) as usize;
-      println!("({}, {})", x, y);
       let idx = x + 1 + ((y + 1 as usize) * (width + 2));
       if let Some(elem) = output.get_mut(idx) {
         *elem = '#' as u8;
