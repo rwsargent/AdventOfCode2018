@@ -122,7 +122,7 @@ pub fn main(input: StringInput) -> PuzzleResult {
   println!("second: {}", second);
 
   let mut buf = [0];
-  while let Ok(size) = stdin().read(&mut buf) {
+  while let Ok(size) = stdin().read_exact(&mut buf) {
     if size > 0 {
       match buf[0] {
         b'q' => {
