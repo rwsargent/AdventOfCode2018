@@ -122,26 +122,24 @@ pub fn main(input: StringInput) -> PuzzleResult {
   println!("second: {}", second);
 
   let mut buf = [0];
-  while let Ok(size) = stdin().read_exact(&mut buf) {
-    if size > 0 {
-      match buf[0] {
-        b'q' => {
-          break;
-        }
-        b'n' => {
-          second += 1;
-          next(&mut stars);
-          print_stars(&stars);
-          println!("second: {}", second);
-        }
-        b'p' => {
-          second -= 1;
-          prev(&mut stars);
-          print_stars(&stars);
-          println!("second: {}", second);
-        }
-        _ => {}
+  while let Ok(_) = stdin().read_exact(&mut buf) {
+    match buf[0] {
+      b'q' => {
+        break;
       }
+      b'n' => {
+        second += 1;
+        next(&mut stars);
+        print_stars(&stars);
+        println!("second: {}", second);
+      }
+      b'p' => {
+        second -= 1;
+        prev(&mut stars);
+        print_stars(&stars);
+        println!("second: {}", second);
+      }
+      _ => {}
     }
   }
 
