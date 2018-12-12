@@ -5,6 +5,7 @@ use std::fs::File;
 use std::hash::Hash;
 use std::io::Read;
 use std::iter;
+use std::ops;
 
 pub type Result<T> = std::result::Result<T, Box<error::Error>>;
 pub type PuzzleResult = Result<PuzzleSolution>;
@@ -15,6 +16,7 @@ pub enum PuzzleSolution {
   u64(u64),
   String(String),
   usize(usize),
+  unit
 }
 
 #[derive(Debug)]
@@ -119,7 +121,7 @@ impl<T: Clone> ExpandableMatrix<T> {
   }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Hash)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash, Copy)]
 pub struct Point {
   pub x: i64,
   pub y: i64,
@@ -128,6 +130,22 @@ pub struct Point {
 impl Point {
   pub fn manhattan_dist(&self, other: &Point) -> i64 {
     (self.x - other.x).abs() + (self.y - other.y).abs()
+  }
+}
+
+impl ops::Add<&Point> for &Point {
+  type Output = Point;
+
+  fn add(self, other: &Point) -> Point {
+    Point { x: self.x + other.x, y: self.y + other.y }
+  }
+}
+
+impl ops::Sub<&Point> for &Point {
+  type Output = Point;
+
+  fn sub(self, other: &Point) -> Point {
+    Point { x: self.x - other.x, y: self.y - other.y }
   }
 }
 

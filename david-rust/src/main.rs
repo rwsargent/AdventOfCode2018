@@ -13,6 +13,7 @@ mod day06;
 mod day07;
 mod day08;
 mod day09;
+mod day10;
 mod utils;
 
 fn main() {
@@ -73,6 +74,9 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     }
     "9" | "9a" | "9b" => {
       day09::marble_game_winner(args[0].parse()?, args[1].parse()?)
+    }
+    "10" | "10a" => {
+      day10::main(StringInput::from_file(args[0].clone())?)
     }
     _ => {
       Err(Box::new(InvalidDay))
