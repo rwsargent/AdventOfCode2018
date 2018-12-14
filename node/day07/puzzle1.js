@@ -1,8 +1,8 @@
 const fs = require('fs') 
 const Graph = require('./graph')
 
-let input = fs.readFileSync(__dirname + '/test.txt', 'utf8').split('\n')
-// let input = fs.readFileSync(__dirname + '/input.txt', 'utf8').split('\n')
+// let input = fs.readFileSync(__dirname + '/test.txt', 'utf8').split('\n')
+let input = fs.readFileSync(__dirname + '/input.txt', 'utf8').split('\n')
 
 let edges = transformInput(input)
 let graph = new Graph()
@@ -13,8 +13,17 @@ for(let edge of edges) {
 for(let edge of edges) {
     graph.addEdge(edge.v1, edge.v2)
 }
-console.log(graph.print())
-console.log(graph.traverse('C'))
+let answer = graph.topologicalSort()
+console.log(answer.join(''))
+// console.log(graph.print('edges'))
+// console.log(graph.print('reqs'))
+// return
+// let answer = graph.traverse('S')
+// console.log('a:',answer.join(''))
+let missing = graph.vertexs.filter(function(vertex) {
+    return !answer.includes(vertex)
+})
+console.log('m:', missing.join(''))
 
 //-------------------
 function transformInput(input) {
