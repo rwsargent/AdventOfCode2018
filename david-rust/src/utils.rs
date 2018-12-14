@@ -16,7 +16,9 @@ pub enum PuzzleSolution {
   u64(u64),
   String(String),
   usize(usize),
-  unit
+  Point(Point),
+  PointSize(Point, usize),
+  unit,
 }
 
 #[derive(Debug)]
