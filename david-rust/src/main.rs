@@ -18,6 +18,7 @@ mod day10;
 mod day11;
 mod day12;
 mod day13;
+mod day14;
 mod utils;
 
 fn main() {
@@ -99,6 +100,9 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     }
     "13b" => {
       day13::last_cart(StringInput::from_file(args[0].clone())?)
+    }
+    "14" | "14a" => {
+      day14::score_string(args[0].parse()?)
     }
     _ => {
       Err(Box::new(InvalidDay))
@@ -245,6 +249,13 @@ Step F must be finished before step E can begin."
   \------/   ")).unwrap(), PuzzleSolution::Point(Point { x: 7, y: 3 }));
   }
 
+  #[test]
+  fn day14a() {
+    assert_eq!(day14::score_string(5).unwrap(), PuzzleSolution::String("0124515891".to_string()));
+    assert_eq!(day14::score_string(18).unwrap(), PuzzleSolution::String("9251071085".to_string()));
+    assert_eq!(day14::score_string(2018).unwrap(), PuzzleSolution::String("5941429882".to_string()));
+  }
+
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {
     vec![
       ("1a", vec!["data/day01.txt".to_string()], PuzzleSolution::i64(533)),
@@ -270,6 +281,7 @@ Step F must be finished before step E can begin."
       ("12a", vec!["data/day12.txt".to_string()], PuzzleSolution::i32(2823)),
       ("13a", vec!["data/day13.txt".to_string()], PuzzleSolution::Point(Point { x: 65, y: 73 })),
       ("13b", vec!["data/day13.txt".to_string()], PuzzleSolution::Point(Point { x: 54, y: 66 })),
+      ("14a", vec!["824501".to_string()], PuzzleSolution::String("1031816654".to_string())),
     ]
   }
 
