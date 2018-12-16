@@ -1,5 +1,5 @@
 use std::cmp::max;
-use std::default::Default;
+
 use utils::*;
 
 struct Battery {
@@ -86,7 +86,7 @@ impl Battery {
 }
 
 pub fn top_left_coor_of_most_powerful_cell(input: i64) -> PuzzleResult {
-  let mut battery = Battery::new(input);
+  let battery = Battery::new(input);
 
   let mut max_point = Point { x: 0, y: 0 };
   let mut max_power = 0;
@@ -105,7 +105,7 @@ pub fn top_left_coor_of_most_powerful_cell(input: i64) -> PuzzleResult {
 }
 
 pub fn most_powerful(input: i64) -> PuzzleResult {
-  let mut battery = Battery::new(input);
+  let battery = Battery::new(input);
 
   let mut max_point = Point { x: 0, y: 0 };
   let mut max_power = 0;

@@ -1,7 +1,6 @@
 use bit_set::BitSet;
 use regex::Regex;
 
-use std::collections::HashMap;
 use utils::*;
 
 fn parse_input(input: StringInput) -> Result<(Tape, BitSet)> {
@@ -58,11 +57,6 @@ fn is_plant(s: &str) -> bool {
   }
 }
 
-struct Rule {
-  pattern: [bool; 5],
-  result: bool,
-}
-
 fn get_value(tape: &Tape, idx: i32) -> usize {
   let mut value = 0;
   let mut m: usize = 1;
@@ -106,8 +100,6 @@ fn print_tape(tape: &Tape) {
 pub fn sum_pots_with_plants(input: StringInput, generations: usize) -> PuzzleResult {
   let (mut state, rules) = parse_input(input)?;
 
-  let mut iterations_until_loop = 0;
-  let mut first_sighting = 0;
   for i in 0..generations {
     state = step(&state, &rules);
     print!("\r{}  ", i);

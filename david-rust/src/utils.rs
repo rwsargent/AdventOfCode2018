@@ -1,13 +1,16 @@
-use bit_set::BitSet;
-
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error;
 use std::fmt;
+use std::fmt::Display;
 use std::fs::File;
 use std::hash::Hash;
 use std::io::Read;
 use std::iter;
 use std::ops;
+use std::rc::Rc;
+
+use bit_set::BitSet;
 
 pub type Result<T> = std::result::Result<T, Box<error::Error>>;
 pub type PuzzleResult = Result<PuzzleSolution>;
@@ -91,6 +94,10 @@ impl StringInput {
       path: "".to_string(),
       content,
     }
+  }
+
+  pub fn from_str(contents: &str) -> StringInput {
+    StringInput::from_string(contents.to_string())
   }
 
   pub fn lines(&self) -> Vec<&str> {
@@ -220,3 +227,157 @@ impl Tape {
     (self.min..=self.max).filter(move |i| self.contains(*i))
   }
 }
+
+#[derive(Eq, PartialEq, Debug)]
+pub enum Direction {
+  North,
+  East,
+  South,
+  West,
+}
+
+impl Direction {
+  pub fn left(&self) -> Direction {
+    match self {
+      Direction::North => Direction::West,
+      Direction::West => Direction::South,
+      Direction::South => Direction::East,
+      Direction::East => Direction::North,
+    }
+  }
+  pub fn right(&self) -> Direction {
+    match self {
+      Direction::North => Direction::East,
+      Direction::West => Direction::North,
+      Direction::South => Direction::West,
+      Direction::East => Direction::South,
+    }
+  }
+}
+
+
+struct Node<T> {
+  pub data: T,
+  pub prev: Option<Rc<RefCell<Node<T>>>>,
+  pub next: Option<Rc<RefCell<Node<T>>>>,
+}
+
+impl<T> Node<T> {
+  pub fn new(data: T) -> Self {
+    Self { data, prev: None, next: None }
+  }
+
+  pub fn split(&self) -> (T, Option<Rc<RefCell<Node<T>>>>, Option<Rc<RefCell<Node<T>>>>) where T: Clone {
+    (self.data.clone(), self.prev.clone(), self.next.clone())
+  }
+}
+
+pub struct CircularList<T> {
+  len: usize,
+  current: Option<Rc<RefCell<Node<T>>>>,
+}
+
+impl<T> CircularList<T> {
+  pub fn new() -> Self {
+    Self { len: 0, current: None }
+  }
+
+  pub fn move_prev(&mut self) {
+    let next = if let Some(ref cur) = self.current {
+      cur.borrow().prev.clone()
+    } else {
+      None
+    };
+    self.current = next;
+  }
+
+  pub fn move_next(&mut self) {
+    let prev = if let Some(ref cur) = self.current {
+      cur.borrow().next.clone()
+    } else {
+      None
+    };
+    self.current = prev;
+  }
+
+  /// Removes the current pointer, returning the data there, and sets current to next.
+  pub fn remove_current(&mut self) -> Option<T> where T: Clone {
+    if self.len == 0 {
+      None
+    } else {
+      self.len -= 1;
+      if self.len == 0 {
+        let cur = self.current.take();
+        let cur = cur.unwrap();
+        let cur = cur.borrow();
+        let data = cur.data.clone();
+        Some(data)
+      } else {
+        if let Some(cur) = self.current.take() {
+          let cur = cur.borrow();
+          let (data, prev, next) = cur.split();
+          if let Some(ref p) = prev {
+            p.borrow_mut().next = cur.next.clone();
+          }
+          if let Some(ref n) = next {
+            n.borrow_mut().prev = cur.prev.clone();
+          }
+          self.current = next;
+          Some(data)
+        } else {
+          None
+        }
+      }
+    }
+  }
+
+  /// Inserts data to the right (as next) of current and sets current to point to new data.
+  pub fn insert(&mut self, data: T) {
+    self.current = Some(if let Some(cur) = self.current.take() {
+      let mut new_node = Node::new(data);
+      new_node.next = cur.borrow().next.clone();
+      new_node.prev = Some(cur.clone());
+
+      let rc = Rc::new(RefCell::new(new_node));
+
+      if self.len == 1 {
+        let mut cur = cur.borrow_mut();
+        cur.next = Some(rc.clone());
+        cur.prev = Some(rc.clone());
+      } else {
+        if let Some(ref mut n) = cur.borrow_mut().next {
+          n.borrow_mut().prev = Some(rc.clone());
+        }
+        cur.borrow_mut().next = Some(rc.clone());
+      }
+      rc
+    } else {
+      let mut node = Node::new(data);
+      let rc = Rc::new(RefCell::new(node));
+      rc.borrow_mut().next = Some(rc.clone());
+      rc.borrow_mut().prev = Some(rc.clone());
+      rc
+    });
+    self.len += 1;
+  }
+}
+
+impl<T: Display> Display for CircularList<T> {
+  fn fmt(&self, w: &mut std::fmt::Formatter) -> std::result::Result<(), std::fmt::Error> {
+    write!(w, "{} [", self.len)?;
+    let mut node = self.current.clone();
+    let mut count = 0;
+    while let Some(n) = node {
+      count += 1;
+      write!(w, "{}", n.borrow().data)?;
+      node = if count < self.len {
+        write!(w, ", ")?;
+        n.borrow().next.clone()
+      } else {
+        None
+      }
+    }
+    write!(w, "]")
+  }
+}
+

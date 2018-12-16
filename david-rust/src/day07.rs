@@ -83,7 +83,6 @@ pub fn get_execution_time(input: StringInput, workers: usize, task_overhead: usi
   let mut ordered = actions.clone().into_iter().collect::<Vec<_>>();
   let mut t = dependencies.map.clone().into_iter().collect::<Vec<_>>();
   t.sort_by_key(|x| x.0.clone());
-  let mut workers_free = workers.len();
   ordered.sort();
   let mut time = 0;
   while !actions.is_empty() {
@@ -95,7 +94,6 @@ pub fn get_execution_time(input: StringInput, workers: usize, task_overhead: usi
         Some(task) => {
           if worker.finishes_at == time {
             actions.remove(&task);
-            workers_free += 1;
             finished_a_task = true;
             next_task = get_next_task(&ordered, &actions, &dependencies);
           } else {
@@ -112,7 +110,6 @@ pub fn get_execution_time(input: StringInput, workers: usize, task_overhead: usi
       match next_task {
         Some(task) => {
           let task = ordered.remove(task);
-          workers_free -= 1;
           worker.finishes_at = time + get_time_for_task(&task)? + task_overhead;
           worker.current_task = Some(task);
           if worker.finishes_at < next_time {

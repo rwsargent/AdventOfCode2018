@@ -1,6 +1,7 @@
+use std::io::{Read, stdin, stdout, Write};
+
 use regex::Regex;
 
-use std::io::{Read, stdin, stdout, Write};
 use utils::*;
 
 fn get_stars(input: StringInput) -> Result<Vec<Star>> {
@@ -76,10 +77,9 @@ fn print_stars(stars: &Vec<Star>) {
   if let Some((min, max)) = bounds(stars) {
     let width = (max.x - min.x + 3) as usize;
     let height = (max.y - min.y + 3) as usize;
-    let area = width * height;
     let mut output = Vec::with_capacity((width + 2) * height);
-    for h in 0..height {
-      for w in 0..width {
+    for _ in 0..height {
+      for _ in 0..width {
         output.push('.' as u8);
       }
       output.push('\n' as u8);

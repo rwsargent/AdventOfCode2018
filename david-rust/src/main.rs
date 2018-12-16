@@ -2,6 +2,7 @@ extern crate bit_set;
 extern crate regex;
 
 use std::env;
+
 use utils::*;
 
 mod day01;
@@ -16,6 +17,7 @@ mod day09;
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 mod utils;
 
 fn main() {
@@ -92,6 +94,12 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     "12b" => {
       day12::sum_pots_with_plants(StringInput::from_file(args[0].clone())?, args[1].parse()?)
     }
+    "13" | "13a" => {
+      day13::first_collision(StringInput::from_file(args[0].clone())?)
+    }
+    "13b" => {
+      day13::last_cart(StringInput::from_file(args[0].clone())?)
+    }
     _ => {
       Err(Box::new(InvalidDay))
     }
@@ -147,27 +155,27 @@ mod test {
 
   #[test]
   fn day07() {
-    assert_eq!(day07::get_execution_order(StringInput::from_string(
+    assert_eq!(day07::get_execution_order(StringInput::from_str(
       "Step C must be finished before step A can begin.
 Step C must be finished before step F can begin.
 Step A must be finished before step B can begin.
 Step A must be finished before step D can begin.
 Step B must be finished before step E can begin.
 Step D must be finished before step E can begin.
-Step F must be finished before step E can begin.".to_string()
+Step F must be finished before step E can begin."
     )).unwrap(), PuzzleSolution::String("CABDFE".to_string()));
   }
 
   #[test]
   fn day07b() {
-    assert_eq!(day07::get_execution_time(StringInput::from_string(
+    assert_eq!(day07::get_execution_time(StringInput::from_str(
       "Step C must be finished before step A can begin.
 Step C must be finished before step F can begin.
 Step A must be finished before step B can begin.
 Step A must be finished before step D can begin.
 Step B must be finished before step E can begin.
 Step D must be finished before step E can begin.
-Step F must be finished before step E can begin.".to_string()
+Step F must be finished before step E can begin."
     ), 2, 0).unwrap(), PuzzleSolution::usize(15));
   }
 
@@ -209,7 +217,7 @@ Step F must be finished before step E can begin.".to_string()
 
   #[test]
   fn day12a() {
-    assert_eq!(day12::sum_pots_with_plants(StringInput::from_string("initial state: #..#.#..##......###...###
+    assert_eq!(day12::sum_pots_with_plants(StringInput::from_str("initial state: #..#.#..##......###...###
 
 ...## => #
 ..#.. => #
@@ -224,7 +232,17 @@ Step F must be finished before step E can begin.".to_string()
 ##.## => #
 ###.. => #
 ###.# => #
-####. => #".to_string())).unwrap(), PuzzleSolution::i32(325))
+####. => #"), 20).unwrap(), PuzzleSolution::i32(325))
+  }
+
+  #[test]
+  fn day13a() {
+    assert_eq!(day13::first_collision(StringInput::from_str(r"/->-\
+|   |  /----\
+| /-+--+-\  |
+| | |  | v  |
+\-+-/  \-+--/
+  \------/   ")).unwrap(), PuzzleSolution::Point(Point { x: 7, y: 3 }));
   }
 
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {
@@ -250,6 +268,8 @@ Step F must be finished before step E can begin.".to_string()
       ("11a", vec!["8561".to_string()], PuzzleSolution::Point(Point { x: 21, y: 37 })),
       ("11b", vec!["8561".to_string()], PuzzleSolution::PointSize(Point { x: 236, y: 146 }, 12)),
       ("12a", vec!["data/day12.txt".to_string()], PuzzleSolution::i32(2823)),
+      ("13a", vec!["data/day13.txt".to_string()], PuzzleSolution::Point(Point { x: 65, y: 73 })),
+      ("13b", vec!["data/day13.txt".to_string()], PuzzleSolution::Point(Point { x: 54, y: 66 })),
     ]
   }
 
