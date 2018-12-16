@@ -1,3 +1,5 @@
+use bit_set::BitSet;
+
 use std::collections::HashMap;
 use std::error;
 use std::fmt;
@@ -13,6 +15,7 @@ pub type PuzzleResult = Result<PuzzleSolution>;
 #[derive(Debug, PartialEq, Eq)]
 pub enum PuzzleSolution {
   i64(i64),
+  i32(i32),
   u64(u64),
   String(String),
   usize(usize),
@@ -166,5 +169,54 @@ impl<K: Eq + Hash, V> MultiMap<K, V> {
 
   pub fn get(&self, key: &K) -> Option<&Vec<V>> {
     self.map.get(key)
+  }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct Tape {
+  neg: BitSet<u64>,
+  pos: BitSet<u64>,
+  pub min: i32,
+  pub max: i32,
+}
+
+impl Tape {
+  pub fn new() -> Tape {
+    Tape {
+      neg: BitSet::default(),
+      pos: BitSet::default(),
+      min: 0,
+      max: 0,
+    }
+  }
+  pub fn contains(&self, idx: i32) -> bool {
+    if idx < 0 {
+      self.neg.contains((-idx) as usize)
+    } else {
+      self.pos.contains(idx as usize)
+    }
+  }
+  pub fn insert(&mut self, idx: i32) -> bool {
+    if idx < 0 {
+      if idx < self.min {
+        self.min = idx;
+      }
+      self.neg.insert(-idx as usize)
+    } else {
+      if idx > self.max {
+        self.max = idx;
+      }
+      self.pos.insert(idx as usize)
+    }
+  }
+  pub fn remove(&mut self, idx: i32) -> bool {
+    if idx < 0 {
+      self.neg.remove(-idx as usize)
+    } else {
+      self.pos.remove(idx as usize)
+    }
+  }
+  pub fn iter(self) -> impl iter::Iterator<Item=i32> {
+    (self.min..=self.max).filter(move |i| self.contains(*i))
   }
 }
