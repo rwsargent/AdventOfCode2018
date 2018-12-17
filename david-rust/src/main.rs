@@ -104,6 +104,9 @@ fn solve(day: &str, args: Vec<String>) -> PuzzleResult {
     "14" | "14a" => {
       day14::score_string(args[0].parse()?)
     }
+    "14b" => {
+      day14::num_recipes_until(&args[0])
+    }
     _ => {
       Err(Box::new(InvalidDay))
     }
@@ -256,6 +259,15 @@ Step F must be finished before step E can begin."
     assert_eq!(day14::score_string(2018).unwrap(), PuzzleSolution::String("5941429882".to_string()));
   }
 
+  #[test]
+  fn day14b() {
+    assert_eq!(day14::num_recipes_until("51589").unwrap(), PuzzleSolution::usize(9));
+    assert_eq!(day14::num_recipes_until("01245").unwrap(), PuzzleSolution::usize(5));
+    assert_eq!(day14::num_recipes_until("92510").unwrap(), PuzzleSolution::usize(18));
+    assert_eq!(day14::num_recipes_until("59414").unwrap(), PuzzleSolution::usize(2018));
+  }
+
+
   fn expected_results() -> Vec<(&'static str, Vec<String>, PuzzleSolution)> {
     vec![
       ("1a", vec!["data/day01.txt".to_string()], PuzzleSolution::i64(533)),
@@ -282,6 +294,7 @@ Step F must be finished before step E can begin."
       ("13a", vec!["data/day13.txt".to_string()], PuzzleSolution::Point(Point { x: 65, y: 73 })),
       ("13b", vec!["data/day13.txt".to_string()], PuzzleSolution::Point(Point { x: 54, y: 66 })),
       ("14a", vec!["824501".to_string()], PuzzleSolution::String("1031816654".to_string())),
+      ("14b", vec!["824501".to_string()], PuzzleSolution::usize(20179839)),
     ]
   }
 

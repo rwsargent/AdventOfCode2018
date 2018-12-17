@@ -14,11 +14,9 @@ pub fn marble_game_winner(num_players: usize, last_marble: usize) -> PuzzleResul
         buf.move_prev();
       }
       let player_idx = current_marble % num_players;
-      unsafe {
-        let player = players.get_unchecked_mut(player_idx);
-        *player += current_marble;
-        *player += buf.remove_current().unwrap();
-      }
+      let player = &mut players[player_idx];
+      *player += current_marble;
+      *player += buf.remove_current().unwrap();
     } else {
       buf.move_next();
       buf.insert(current_marble);

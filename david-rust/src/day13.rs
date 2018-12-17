@@ -209,9 +209,9 @@ impl CartTrack {
   fn get(&self, x: usize, y: usize) -> u8 {
     if y < self.data.len() {
       unsafe {
-        let vec = self.data.get_unchecked(y);
+        let vec = &self.data[y];
         if x < vec.len() {
-          return *vec.get_unchecked(x);
+          return vec[x];
         }
       }
     }
