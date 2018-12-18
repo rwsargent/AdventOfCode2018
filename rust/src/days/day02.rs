@@ -1,7 +1,7 @@
-use util::input::get_input;
 use std::collections::HashMap;
+use util::input::get_input;
 
-pub fn part_one(path : String) -> i32 {
+pub fn part_one(path: String) -> i32 {
     let input = get_input(&path).as_strings();
     let mut twos = 0;
     let mut threes = 0;
@@ -17,7 +17,7 @@ pub fn part_one(path : String) -> i32 {
     twos * threes
 }
 
-pub fn part_two(path : String) -> String {
+pub fn part_two(path: String) -> String {
     let input = get_input(&path).as_strings();
     for left in &input {
         for right in &input {
@@ -27,7 +27,7 @@ pub fn part_two(path : String) -> String {
             }
         }
     }
-    return "".to_string()
+    return "".to_string();
 }
 
 pub fn run() {
@@ -35,25 +35,26 @@ pub fn run() {
     println!("Part 2: {}", part_two("inputs/day02.txt".to_string()));
 }
 
-fn get_histogram(word : &str) -> HashMap<char, i32> {
+fn get_histogram(word: &str) -> HashMap<char, i32> {
     let mut counts = HashMap::new();
     for letter in word.chars() {
-        counts.entry(letter)
-            .and_modify(|count| { *count += 1})
+        counts
+            .entry(letter)
+            .and_modify(|count| *count += 1)
             .or_insert(1);
     }
-    return counts
+    return counts;
 }
 
-fn count_twos(counts : &HashMap<char, i32>) -> usize {
+fn count_twos(counts: &HashMap<char, i32>) -> usize {
     counts.values().filter(|&val| *val == 2).count()
 }
 
-fn count_threes(counts : &HashMap<char, i32>) -> usize {
+fn count_threes(counts: &HashMap<char, i32>) -> usize {
     counts.values().filter(|&val| *val == 3).count()
 }
 
-fn remove_letter(word : &str, idx : usize) -> String {
+fn remove_letter(word: &str, idx: usize) -> String {
     let mut result = String::new();
     for ent in word.char_indices() {
         if ent.0 == idx {
@@ -64,11 +65,11 @@ fn remove_letter(word : &str, idx : usize) -> String {
     result
 }
 
-fn edit_index(left : &str, right : &str) ->  Vec<usize> {
+fn edit_index(left: &str, right: &str) -> Vec<usize> {
     let mut idices = Vec::new();
     let mut left_itr = left.chars();
     let mut right_itr = right.chars();
-    for idx in  0..left.len() {
+    for idx in 0..left.len() {
         if left_itr.next() != right_itr.next() {
             idices.push(idx)
         }
