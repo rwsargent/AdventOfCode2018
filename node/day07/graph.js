@@ -1,76 +1,82 @@
 function Graph() {
-    this.vertexs = [] 
+    this.nodes = [] 
     this.edges = [] 
-    this.reqs = []
-    this.relations = 0
 }
 
-Graph.prototype.addVertex = function(vertex) {
-    this.vertexs.push(vertex) 
-    this.edges[vertex] = [] 
-    this.reqs[vertex] = [] 
+Graph.prototype.addNode = function(node) {
+    if(this.nodes.includes(node)) return 
+    this.nodes.push(node) 
+    this.edges[node] = [] 
 }
 
-Graph.prototype.addEdge = function(vertex1, vertex2) {
-    this.edges[vertex1].push(vertex2) 
-    this.reqs[vertex2].push(vertex1)
-    this.relations++
+Graph.prototype.addEdge = function(node, edge) {
+    if(this.edges[node].includes(edge)) return 
+    this.edges[node].push(edge) 
+}
+
+Graph.prototype.create = function(input) {
+    return input
 }
 
 Graph.prototype.print = function(type) {
     type = type || 'edges'
-    let vertexs = this.vertexs 
-    vertexs.sort()
+    let nodes = this.nodes 
+    nodes.sort()
     let print = '\n' + type + '\n'
-    print += vertexs.map(function(vertex) {
-        return vertex + ' -> ' + this[type][vertex].join(', ')
+    print += nodes.map(function(node) {
+        return node + ' -> ' + this[type][node].join(', ')
     }.bind(this)).join('\n')
     return print
 }
 
-Graph.prototype.topologicalSort = function() {
+Graph.prototype.dfsOrder = function() {
     let visited = [] 
+    let nodes = this.nodes
+    nodes.sort().reverse()
 
-    for(let vertex of this.vertexs) {
-        if(visited.includes(vertex)) continue 
-        helper(vertex, visited, this)
+    for(let node of nodes) {
+        if(visited.includes(node)) continue 
+        helper(node, visited, this)
     }
 
     return visited.reverse()
 
-    function helper(vertex, visited, graph) {
-        let edges = graph.edges[vertex] 
+    function helper(node, visited, graph) {
+        let edges = graph.edges[node] 
         edges.sort().reverse()
         for(let edge of edges) {
-            if(edge === vertex) continue
             if(visited.includes(edge)) continue
             helper(edge, visited, graph)
         }
-        visited.push(vertex) 
+        visited.push(node) 
     }
 }
 
-Graph.prototype.traverse = function(vertex) {
-    let visited = [] 
-    let queue = [] 
+Graph.prototype.kahnOrder = function() {
+    let order = [] 
+    let nodes = this.nodes.sort()
+    let edges = this.edges
+    let parents = nodes.filter(function(node) {
+        return !edges[node].length
+    }).sort()
 
-    queue.push(vertex) 
+    while(parents.length) {
+        let next = parents.shift() 
+        order.push(next)
 
-    while(queue.length) {
-        queue.sort()
-        vertex = queue.shift() 
-        if(!this.edges[vertex].length && !queue.length) {
-            visited.push(vertex) 
+        delete(edges[next]) 
+
+        for(let node in edges) {
+            edges[node] = edges[node].filter(function(edge) {
+                return edge != next
+            })
+            if(!edges[node].length && !parents.includes(node)) parents.push(node)
         }
-        if(!this.edges[vertex].length) continue
-        if(!visited.includes(vertex)) visited.push(vertex)
-        let edges = this.edges[vertex]
-        for(let edge of edges) {
-            if(visited.includes(edge)) continue 
-            queue.push(edge)
-        }
+
+        parents.sort()
     }
-    return visited
+
+    return order
 }
 
 module.exports = Graph
