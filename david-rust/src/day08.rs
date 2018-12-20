@@ -13,10 +13,7 @@ fn parse_node(input: &mut SplitWhitespace) -> Result<Node> {
   for _ in 0..num_metadata {
     metadata.push(input.next().ok_or(Box::new(InvalidInput))?.parse()?);
   }
-  Ok(Node {
-    children,
-    metadata,
-  })
+  Ok(Node { children, metadata })
 }
 
 #[derive(Debug)]
@@ -40,14 +37,13 @@ fn do_count_value(node: &Node) -> usize {
   if node.children.len() == 0 {
     node.metadata.iter().sum()
   } else {
-    node.metadata.iter().map(|i| {
-      match node.children.get(*i - 1) {
-        Some(c) => {
-          do_count_value(c)
-        }
-        None => 0
-      }
-    }).sum()
+    node.metadata
+        .iter()
+        .map(|i| match node.children.get(*i - 1) {
+          Some(c) => do_count_value(c),
+          None => 0,
+        })
+        .sum()
   }
 }
 

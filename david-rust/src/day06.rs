@@ -25,7 +25,10 @@ pub fn total_distance_under(input: StringInput, max_dist: usize) -> PuzzleResult
   let average = {
     let x: i64 = coordinates.iter().map(|p| p.x).sum();
     let y: i64 = coordinates.iter().map(|p| p.y).sum();
-    Point { x: x / coordinates.len() as i64, y: y / coordinates.len() as i64 }
+    Point {
+      x: x / coordinates.len() as i64,
+      y: y / coordinates.len() as i64,
+    }
   };
 
   let mut considered = HashSet::new();
@@ -34,18 +37,42 @@ pub fn total_distance_under(input: StringInput, max_dist: usize) -> PuzzleResult
   let mut num_safe = 0;
   while let Some(curr) = queue.pop() {
     let dist = total_distance(&curr, &coordinates) as usize;
-//    println!("dist: {}", dist);
+    //    println!("dist: {}", dist);
     if dist < max_dist {
       num_safe += 1;
       let neighboors: Vec<_> = vec![
-        Point { x: curr.x, y: curr.y + 1 },
-        Point { x: curr.x, y: curr.y - 1 },
-        Point { x: curr.x - 1, y: curr.y },
-        Point { x: curr.x - 1, y: curr.y + 1 },
-        Point { x: curr.x - 1, y: curr.y - 1 },
-        Point { x: curr.x + 1, y: curr.y + 1 },
-        Point { x: curr.x + 1, y: curr.y + -1 },
-        Point { x: curr.x + 1, y: curr.y },
+        Point {
+          x: curr.x,
+          y: curr.y + 1,
+        },
+        Point {
+          x: curr.x,
+          y: curr.y - 1,
+        },
+        Point {
+          x: curr.x - 1,
+          y: curr.y,
+        },
+        Point {
+          x: curr.x - 1,
+          y: curr.y + 1,
+        },
+        Point {
+          x: curr.x - 1,
+          y: curr.y - 1,
+        },
+        Point {
+          x: curr.x + 1,
+          y: curr.y + 1,
+        },
+        Point {
+          x: curr.x + 1,
+          y: curr.y + -1,
+        },
+        Point {
+          x: curr.x + 1,
+          y: curr.y,
+        },
       ]
           .into_iter()
           .filter(|p| !considered.contains(&p))
@@ -118,14 +145,38 @@ pub fn largest_finite(input: StringInput) -> PuzzleResult {
         Some(closest) if closest == idx => {
           size += 1;
           let neighbors: Vec<_> = vec![
-            Point { x: curr.x, y: curr.y + 1 },
-            Point { x: curr.x, y: curr.y - 1 },
-            Point { x: curr.x - 1, y: curr.y },
-            Point { x: curr.x - 1, y: curr.y + 1 },
-            Point { x: curr.x - 1, y: curr.y - 1 },
-            Point { x: curr.x + 1, y: curr.y + 1 },
-            Point { x: curr.x + 1, y: curr.y + -1 },
-            Point { x: curr.x + 1, y: curr.y },
+            Point {
+              x: curr.x,
+              y: curr.y + 1,
+            },
+            Point {
+              x: curr.x,
+              y: curr.y - 1,
+            },
+            Point {
+              x: curr.x - 1,
+              y: curr.y,
+            },
+            Point {
+              x: curr.x - 1,
+              y: curr.y + 1,
+            },
+            Point {
+              x: curr.x - 1,
+              y: curr.y - 1,
+            },
+            Point {
+              x: curr.x + 1,
+              y: curr.y + 1,
+            },
+            Point {
+              x: curr.x + 1,
+              y: curr.y + -1,
+            },
+            Point {
+              x: curr.x + 1,
+              y: curr.y,
+            },
           ]
               .into_iter()
               .filter(|p| !considered.contains(&p))
@@ -173,5 +224,3 @@ fn find_min_coordinate(point: &Point, coordinates: &Vec<Point>) -> Option<usize>
     result
   }
 }
-
-

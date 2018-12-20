@@ -24,6 +24,7 @@ pub enum PuzzleSolution {
   usize(usize),
   Point(Point),
   PointSize(Point, usize),
+  Triplet(usize, usize, usize),
   unit,
 }
 
@@ -39,15 +40,13 @@ impl fmt::Display for InvalidInput {
 }
 
 #[derive(Debug)]
-pub struct InvalidLine {
-  pub line: String
-}
+pub struct InvalidLine(pub String);
 
 impl error::Error for InvalidLine {}
 
 impl fmt::Display for InvalidLine {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "Input line defied expectations {}", self.line)
+    write!(f, "Input line defied expectations {}", self.0)
   }
 }
 
@@ -58,7 +57,10 @@ impl error::Error for CouldNotFindSolution {}
 
 impl fmt::Display for CouldNotFindSolution {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "A solution could not be found. Is there a bug? Is your input bad?")
+    write!(
+      f,
+      "A solution could not be found. Is there a bug? Is your input bad?"
+    )
   }
 }
 
@@ -79,12 +81,12 @@ pub struct StringInput {
 }
 
 impl StringInput {
-  pub fn from_file(path: String) -> Result<StringInput> {
-    let mut file = File::open(path.clone())?;
+  pub fn from_file(path: &String) -> Result<StringInput> {
+    let mut file = File::open(path)?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
     Ok(StringInput {
-      path,
+      path: path.to_string(),
       content,
     })
   }
@@ -113,10 +115,7 @@ pub struct ExpandableMatrix<T: Clone> {
 
 impl<T: Clone> ExpandableMatrix<T> {
   pub fn new(zero: T) -> ExpandableMatrix<T> {
-    ExpandableMatrix {
-      zero,
-      data: vec![],
-    }
+    ExpandableMatrix { zero, data: vec![] }
   }
 
   pub fn get_mut(&mut self, x: usize, y: usize) -> &mut T {
@@ -149,7 +148,10 @@ impl ops::Add<&Point> for &Point {
   type Output = Point;
 
   fn add(self, other: &Point) -> Point {
-    Point { x: self.x + other.x, y: self.y + other.y }
+    Point {
+      x: self.x + other.x,
+      y: self.y + other.y,
+    }
   }
 }
 
@@ -157,21 +159,29 @@ impl ops::Sub<&Point> for &Point {
   type Output = Point;
 
   fn sub(self, other: &Point) -> Point {
-    Point { x: self.x - other.x, y: self.y - other.y }
+    Point {
+      x: self.x - other.x,
+      y: self.y - other.y,
+    }
   }
 }
 
 pub struct MultiMap<K: Eq + Hash, V> {
-  pub map: HashMap<K, Vec<V>>
+  pub map: HashMap<K, Vec<V>>,
 }
 
 impl<K: Eq + Hash, V> MultiMap<K, V> {
   pub fn new() -> MultiMap<K, V> {
-    MultiMap { map: HashMap::new() }
+    MultiMap {
+      map: HashMap::new(),
+    }
   }
 
   pub fn insert(&mut self, key: K, value: V) {
-    self.map.entry(key).or_insert(Vec::with_capacity(1)).push(value)
+    self.map
+        .entry(key)
+        .or_insert(Vec::with_capacity(1))
+        .push(value)
   }
 
   pub fn get(&self, key: &K) -> Option<&Vec<V>> {
@@ -255,7 +265,6 @@ impl Direction {
   }
 }
 
-
 struct Node<T> {
   pub data: T,
   pub prev: Option<Rc<RefCell<Node<T>>>>,
@@ -264,10 +273,23 @@ struct Node<T> {
 
 impl<T> Node<T> {
   pub fn new(data: T) -> Self {
-    Self { data, prev: None, next: None }
+    Self {
+      data,
+      prev: None,
+      next: None,
+    }
   }
 
-  pub fn split(&self) -> (T, Option<Rc<RefCell<Node<T>>>>, Option<Rc<RefCell<Node<T>>>>) where T: Clone {
+  pub fn split(
+    &self,
+  ) -> (
+    T,
+    Option<Rc<RefCell<Node<T>>>>,
+    Option<Rc<RefCell<Node<T>>>>,
+  )
+    where
+        T: Clone,
+  {
     (self.data.clone(), self.prev.clone(), self.next.clone())
   }
 }
@@ -279,7 +301,10 @@ pub struct CircularList<T> {
 
 impl<T> CircularList<T> {
   pub fn new() -> Self {
-    Self { len: 0, current: None }
+    Self {
+      len: 0,
+      current: None,
+    }
   }
 
   pub fn move_prev(&mut self) {
@@ -301,7 +326,10 @@ impl<T> CircularList<T> {
   }
 
   /// Removes the current pointer, returning the data there, and sets current to next.
-  pub fn remove_current(&mut self) -> Option<T> where T: Clone {
+  pub fn remove_current(&mut self) -> Option<T>
+    where
+        T: Clone,
+  {
     if self.len == 0 {
       None
     } else {
@@ -380,4 +408,3 @@ impl<T: Display> Display for CircularList<T> {
     write!(w, "]")
   }
 }
-

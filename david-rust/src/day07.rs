@@ -5,7 +5,9 @@ use regex::Regex;
 
 use utils::*;
 
-fn get_actions_and_dependencies(input: StringInput) -> Result<(HashSet<String>, MultiMap<String, String>)> {
+fn get_actions_and_dependencies(
+  input: StringInput,
+) -> Result<(HashSet<String>, MultiMap<String, String>)> {
   let re = Regex::new(r"Step ([A-Z]) must be finished before step ([A-Z]) can begin\.")?;
   let mut dependencies = MultiMap::new();
   let mut actions = HashSet::new();
@@ -17,7 +19,11 @@ fn get_actions_and_dependencies(input: StringInput) -> Result<(HashSet<String>, 
   Ok((actions, dependencies))
 }
 
-fn get_next_task(ordered_actions: &Vec<String>, unfinished_actions: &HashSet<String>, dependencies: &MultiMap<String, String>) -> Option<usize> {
+fn get_next_task(
+  ordered_actions: &Vec<String>,
+  unfinished_actions: &HashSet<String>,
+  dependencies: &MultiMap<String, String>,
+) -> Option<usize> {
   let mut found_action = None;
   for (i, action) in ordered_actions.iter().enumerate() {
     match dependencies.get(action) {
@@ -68,17 +74,27 @@ struct Worker {
 }
 
 fn get_time_for_task(task: &String) -> Result<usize> {
-  let r = task.chars().next().map(|c| {
-    ((c as u8) - ('A' as u8) + 1) as usize
-  });
+  let r = task
+      .chars()
+      .next()
+      .map(|c| ((c as u8) - ('A' as u8) + 1) as usize);
   r.ok_or(Box::new(InvalidInput))
 }
 
-pub fn get_execution_time(input: StringInput, workers: usize, task_overhead: usize) -> PuzzleResult {
+pub fn get_execution_time(
+  input: StringInput,
+  workers: usize,
+  task_overhead: usize,
+) -> PuzzleResult {
   if workers == 0 {
     return Err(Box::new(InvalidInput));
   }
-  let mut workers = iter::repeat_with(|| Worker { finishes_at: 0, current_task: None }).take(workers).collect::<Vec<_>>();
+  let mut workers = iter::repeat_with(|| Worker {
+    finishes_at: 0,
+    current_task: None,
+  })
+      .take(workers)
+      .collect::<Vec<_>>();
   let (mut actions, dependencies) = get_actions_and_dependencies(input)?;
   let mut ordered = actions.clone().into_iter().collect::<Vec<_>>();
   let mut t = dependencies.map.clone().into_iter().collect::<Vec<_>>();

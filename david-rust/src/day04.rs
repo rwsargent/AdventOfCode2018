@@ -13,7 +13,9 @@ fn get_guards(input: StringInput) -> Result<HashMap<usize, Vec<usize>>> {
   let guard_re = Regex::new(r"Guard #(\d+)")?;
   let asleep_re = Regex::new("asleep")?;
   for line in lines {
-    let caps = time_re.captures(line).ok_or(InvalidLine { line: line.to_string() })?;
+    let caps = time_re
+        .captures(line)
+        .ok_or(InvalidLine(line.to_string()))?;
     let time = Time {
       year: caps[1].parse()?,
       month: caps[2].parse()?,
@@ -22,9 +24,7 @@ fn get_guards(input: StringInput) -> Result<HashMap<usize, Vec<usize>>> {
       minute: caps[5].parse()?,
     };
     let evt = match guard_re.captures(line) {
-      Some(caps) => {
-        EventType::Guard(caps[1].parse()?)
-      }
+      Some(caps) => EventType::Guard(caps[1].parse()?),
       None => {
         if asleep_re.is_match(line) {
           EventType::Sleep
@@ -42,14 +42,12 @@ fn get_guards(input: StringInput) -> Result<HashMap<usize, Vec<usize>>> {
   let mut fell_asleep_at = 0;
   for event in events.iter() {
     match event.evt {
-      EventType::Guard(id) => {
-        current_guard = id
-      }
-      EventType::Sleep => {
-        fell_asleep_at = event.time.minute
-      }
+      EventType::Guard(id) => current_guard = id,
+      EventType::Sleep => fell_asleep_at = event.time.minute,
       EventType::Wake => {
-        let hour = guards.entry(current_guard).or_insert_with(|| Vec::from_iter(iter::repeat(0).take(60)));
+        let hour = guards
+            .entry(current_guard)
+            .or_insert_with(|| Vec::from_iter(iter::repeat(0).take(60)));
         for x in fell_asleep_at..event.time.minute {
           let minute = hour.get_mut(x).unwrap();
           *minute += 1;
@@ -63,11 +61,23 @@ fn get_guards(input: StringInput) -> Result<HashMap<usize, Vec<usize>>> {
 pub fn most_asleep_guard(input: StringInput) -> PuzzleResult {
   let guards = get_guards(input)?;
 
-  let guards: Vec<_> = guards.into_iter().map(|(id, hour)| {
-    let minutes_asleep = hour.iter().sum();
-    let max = hour.iter().enumerate().max_by_key(|(_, x)| *x).map(|(i, _)| i).unwrap_or(61);
-    Guard { id, minutes_asleep, most_asleep_minute: max }
-  }).collect();
+  let guards: Vec<_> = guards
+      .into_iter()
+      .map(|(id, hour)| {
+        let minutes_asleep = hour.iter().sum();
+        let max = hour
+            .iter()
+            .enumerate()
+            .max_by_key(|(_, x)| *x)
+            .map(|(i, _)| i)
+            .unwrap_or(61);
+        Guard {
+          id,
+          minutes_asleep,
+          most_asleep_minute: max,
+        }
+      })
+      .collect();
 
   let guard = guards.iter().max_by_key(|g| g.minutes_asleep).unwrap();
 
@@ -77,10 +87,17 @@ pub fn most_asleep_guard(input: StringInput) -> PuzzleResult {
 pub fn most_asleep_minute(input: StringInput) -> PuzzleResult {
   let guards = get_guards(input)?;
 
-  let guards: Vec<_> = guards.into_iter().map(|(id, hour)| {
-    let (minute, times_asleep) = hour.iter().enumerate().max_by_key(|(_, x)| *x).unwrap();
-    Guard { id, minutes_asleep: *times_asleep, most_asleep_minute: minute }
-  }).collect();
+  let guards: Vec<_> = guards
+      .into_iter()
+      .map(|(id, hour)| {
+        let (minute, times_asleep) = hour.iter().enumerate().max_by_key(|(_, x)| *x).unwrap();
+        Guard {
+          id,
+          minutes_asleep: *times_asleep,
+          most_asleep_minute: minute,
+        }
+      })
+      .collect();
 
   let guard = guards.iter().max_by_key(|g| g.minutes_asleep).unwrap();
 

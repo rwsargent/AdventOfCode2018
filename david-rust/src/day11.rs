@@ -3,12 +3,14 @@ use std::cmp::max;
 use utils::*;
 
 struct Battery {
-  cells: [i64; 300 * 300]
+  cells: [i64; 300 * 300],
 }
 
 impl Battery {
   fn new(input: i64) -> Battery {
-    let mut battery = Battery { cells: [0; 300 * 300] };
+    let mut battery = Battery {
+      cells: [0; 300 * 300],
+    };
     battery.set_power(input);
     battery
   }
@@ -24,7 +26,9 @@ impl Battery {
         let power = if power_string.len() < 3 {
           0
         } else {
-          power_string[(power_string.len() - 3)..(power_string.len() - 2)].parse().unwrap()
+          power_string[(power_string.len() - 3)..(power_string.len() - 2)]
+              .parse()
+              .unwrap()
         };
         let power = power - 5;
         *cell = power;
@@ -96,7 +100,10 @@ pub fn top_left_coor_of_most_powerful_cell(input: i64) -> PuzzleResult {
       if let Some(power) = battery.get_power_of_square(x, y, 3) {
         if power > max_power {
           max_power = power;
-          max_point = Point { x: x as i64, y: y as i64 };
+          max_point = Point {
+            x: x as i64,
+            y: y as i64,
+          };
         }
       }
     }
@@ -116,7 +123,10 @@ pub fn most_powerful(input: i64) -> PuzzleResult {
       if let Some((power, square_size)) = battery.get_max_power_of_square(x, y) {
         if power > max_power {
           max_power = power;
-          max_point = Point { x: x as i64, y: y as i64 };
+          max_point = Point {
+            x: x as i64,
+            y: y as i64,
+          };
           max_square = square_size;
         }
       }

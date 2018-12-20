@@ -29,11 +29,7 @@ fn get_claims(input: StringInput) -> Result<Vec<Claim>> {
       x: start.x + cap[4].parse::<usize>()?,
       y: start.y + cap[5].parse::<usize>()?,
     };
-    claims.push(Claim {
-      id,
-      start,
-      end,
-    });
+    claims.push(Claim { id, start, end });
   }
   Ok(claims)
 }
@@ -85,6 +81,7 @@ pub fn find_nonoverlapping_claim(input: StringInput) -> PuzzleResult {
     }
   }
 
-  Ok(PuzzleSolution::usize(free_claims.into_iter().next().ok_or(CouldNotFindSolution)?))
+  Ok(PuzzleSolution::usize(
+    free_claims.into_iter().next().ok_or(CouldNotFindSolution)?,
+  ))
 }
-

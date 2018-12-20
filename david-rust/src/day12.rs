@@ -9,7 +9,9 @@ fn parse_input(input: StringInput) -> Result<(Tape, BitSet)> {
 
   let mut lines = input.lines().into_iter();
   let line = lines.next().ok_or(Box::new(InvalidInput))?;
-  let init_caps = initial_re.captures(line).ok_or(Box::new(InvalidLine { line: line.to_string() }))?;
+  let init_caps = initial_re
+      .captures(line)
+      .ok_or(Box::new(InvalidLine(line.to_string())))?;
 
   let mut initial_tape = Tape::new();
   for (i, char) in init_caps[1].chars().enumerate() {
@@ -25,7 +27,9 @@ fn parse_input(input: StringInput) -> Result<(Tape, BitSet)> {
   // blank line
   lines.next();
   for line in lines {
-    let cap = rule_re.captures(line).ok_or(Box::new(InvalidLine { line: line.to_string() }))?;
+    let cap = rule_re
+        .captures(line)
+        .ok_or(Box::new(InvalidLine(line.to_string())))?;
     if is_plant(&cap[6]) {
       let mut value = 0;
       if is_plant(&cap[1]) {
@@ -53,7 +57,7 @@ fn parse_input(input: StringInput) -> Result<(Tape, BitSet)> {
 fn is_plant(s: &str) -> bool {
   match s {
     "#" => true,
-    _ => false
+    _ => false,
   }
 }
 
@@ -84,9 +88,6 @@ fn print_tape(tape: &Tape) {
   let mut s = String::new();
   let mut got_one = false;
   for i in tape.min..=tape.max {
-//    if i == 0 {
-//      s.push('|');
-//    }
     if tape.contains(i) {
       s.push('#');
       got_one = true;

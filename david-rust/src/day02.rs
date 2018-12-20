@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use utils::*;
 
-pub fn checksum(path: String) -> PuzzleResult {
+pub fn checksum(path: &String) -> PuzzleResult {
   let file = StringInput::from_file(path)?;
   let mut has_2_chars = 0;
   let mut has_3_chars = 0;
@@ -30,7 +30,7 @@ pub fn checksum(path: String) -> PuzzleResult {
   Ok(PuzzleSolution::u64(result))
 }
 
-pub fn correct_common_letters(path: String) -> PuzzleResult {
+pub fn correct_common_letters(path: &String) -> PuzzleResult {
   let file = StringInput::from_file(path)?;
   for line in file.lines() {
     for line2 in file.lines() {

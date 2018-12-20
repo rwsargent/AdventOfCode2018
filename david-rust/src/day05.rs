@@ -5,8 +5,9 @@ pub fn react(input: StringInput) -> PuzzleResult {
   for c in input.content.chars() {
     match target.pop() {
       Some(last) => {
-        if last.is_uppercase() != c.is_uppercase() &&
-            last.to_ascii_lowercase() == c.to_ascii_lowercase() {} else {
+        if last.is_uppercase() != c.is_uppercase()
+            && last.to_ascii_lowercase() == c.to_ascii_lowercase()
+            {} else {
           target.push(last);
           target.push(c);
         }
@@ -20,7 +21,6 @@ pub fn react(input: StringInput) -> PuzzleResult {
 }
 
 pub fn react_smallest(input: StringInput) -> PuzzleResult {
-
   "abcdefghijklmnopqrstuvwxyz"
       .chars()
       .map(|c| {
@@ -32,12 +32,9 @@ pub fn react_smallest(input: StringInput) -> PuzzleResult {
         }
         react(StringInput::from_string(result))
       })
-      .min_by_key(|x| {
-        match x {
-          Ok(PuzzleSolution::usize(x)) => *x,
-          _ => 0 as usize
-        }
+      .min_by_key(|x| match x {
+        Ok(PuzzleSolution::usize(x)) => *x,
+        _ => 0 as usize,
       })
       .unwrap()
 }
-
