@@ -3,36 +3,20 @@ const Graph = require('./graph')
 
 // let input = fs.readFileSync(__dirname + '/test.txt', 'utf8').split('\n')
 let input = fs.readFileSync(__dirname + '/input.txt', 'utf8').split('\n')
-
-let edges = transformInput(input)
-let graph = new Graph()
-for(let edge of edges) {
-    if(!graph.vertexs.includes(edge.v1)) graph.addVertex(edge.v1)
-    if(!graph.vertexs.includes(edge.v2)) graph.addVertex(edge.v2)
-}
-for(let edge of edges) {
-    graph.addEdge(edge.v1, edge.v2)
-}
-let answer = graph.topologicalSort()
-console.log(answer.join(''))
-// console.log(graph.print('edges'))
-// console.log(graph.print('reqs'))
-// return
-// let answer = graph.traverse('S')
-// console.log('a:',answer.join(''))
-let missing = graph.vertexs.filter(function(vertex) {
-    return !answer.includes(vertex)
+let steps = input.map(function(step) {
+    let matches = step.match(/[A-Z]/g)
+    return {
+        edge: matches[1],
+        node: matches[2],
+    }
 })
-console.log('m:', missing.join(''))
 
-//-------------------
-function transformInput(input) {
-    let steps = input.map(function(step) {
-        let matches = step.match(/[A-Z]/g)
-        return {
-            v1: matches[1],
-            v2: matches[2],
-        }
-    })
-    return steps
+let graph = new Graph()
+for(let step of steps) {
+    graph.addNode(step.node) 
+    graph.addNode(step.edge) 
+    graph.addEdge(step.node, step.edge)
 }
+
+console.log(graph)
+console.log(graph.kahnOrder().join(''))

@@ -1,13 +1,10 @@
 use std::collections::HashSet;
-use util::input::{
-    get_input,
-};
+use util::input::get_input;
 
 pub fn part_one() -> i32 {
     let input = get_input("inputs/day01.txt").as_ints();
     input.iter().sum()
 }
-
 
 pub fn part_two() -> i32 {
     let input = get_input("inputs/day01.txt").as_ints();
@@ -16,8 +13,8 @@ pub fn part_two() -> i32 {
     loop {
         for change in &input {
             freq += change;
-            if !freqs.insert(freq)  {
-                return freq
+            if !freqs.insert(freq) {
+                return freq;
             }
         }
     }

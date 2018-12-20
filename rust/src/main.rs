@@ -1,11 +1,11 @@
 extern crate regex;
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 extern crate chrono;
 
 mod days;
 mod util;
 use std::env;
-
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -20,6 +20,7 @@ fn main() {
         "day04" => days::day04::run(),
         "day05" => days::day05::run(),
         "day06" => days::day06::run(),
-        x => println!("Unknown day {}.", x)
+        "day07" => days::day07::run(),
+        x => println!("Unknown day {}.", x),
     }
 }

@@ -1,2 +1,2 @@
-pub mod input;
 pub mod cursor;
+pub mod input;
