@@ -1,6 +1,6 @@
 use std::{thread, time};
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::io::{Read, stdin, stdout, Write};
 
@@ -27,73 +27,55 @@ pub fn do_battle(input: StringInput) -> PuzzleResult {
   while game_status != GameStatus::Over {
     game_status = board.step();
     board.print();
-    thread::sleep(time::Duration::from_millis(2));
+    thread::sleep(time::Duration::from_millis(1));
   }
-
-  let board_turn: usize = board.units.values().map(|u| u.turns).min().unwrap();
-  println!("turn: {}", board_turn);
 
   let mut leftover_hitpoints: usize = board.units.values().map(|u| u.hit_points).sum();
   Ok(PuzzleSolution::Triplet(
-    board_turn,
+    board.completed_turns,
     leftover_hitpoints,
-    board_turn * leftover_hitpoints,
+    board.completed_turns * leftover_hitpoints,
   ))
 }
 
 pub fn battle_outcome(input: StringInput) -> PuzzleResult {
   let mut board = parse_board(input)?;
   board.print();
-  //  let mut buf = [0];
-  //  while let Ok(_) = stdin().read_exact(&mut buf) {
-  //    match buf[0] {
-  //      b'q' => {
-  //        break;
-  //      }
-  //      _ => {
-  //        board.step();
-  //        board.print();
-  //      }
-  //    }
-  //  }
+
   let mut game_status = GameStatus::Continue;
   while game_status != GameStatus::Over {
     game_status = board.step();
-    board.print();
-    thread::sleep(time::Duration::from_millis(2));
   }
-
-  let board_turn: usize = board.units.values().map(|u| u.turns).min().unwrap();
-  println!("turn: {}", board_turn);
 
   let mut leftover_hitpoints: usize = board.units.values().map(|u| u.hit_points).sum();
   Ok(PuzzleSolution::Triplet(
-    board_turn,
+    board.completed_turns,
     leftover_hitpoints,
-    board_turn * leftover_hitpoints,
+    board.completed_turns * leftover_hitpoints,
   ))
 }
 
 fn parse_board(input: StringInput) -> Result<Board> {
   let lines = input.lines();
-  let mut board = Vec::with_capacity(lines.len());
+  let width = lines.iter().map(|l| l.len()).max().ok_or(Box::new(InvalidInput))?;
+  let mut map = Vec::with_capacity(lines.len() * width);
   let mut units = HashMap::new();
 
   let mut y = 0;
   for line in lines {
     let mut x = 0;
-    let mut row = Vec::with_capacity(line.len());
     for c in line.chars() {
       match c {
         '#' => {
-          row.push(Square::Wall);
+          map.push(Square::Wall);
         }
         '.' => {
-          row.push(Square::Open);
+          map.push(Square::Open);
         }
         'E' => {
+          let id = UnitId(units.len());
           units.insert(
-            Position { x, y },
+            id,
             Unit {
               tpe: UnitType::Elf,
               turns: 0,
@@ -102,11 +84,12 @@ fn parse_board(input: StringInput) -> Result<Board> {
               position: Position { x, y },
             },
           );
-          row.push(Square::Elf);
+          map.push(Square::Elf(id));
         }
         'G' => {
+          let id = UnitId(units.len());
           units.insert(
-            Position { x, y },
+            id,
             Unit {
               tpe: UnitType::Goblin,
               turns: 0,
@@ -115,7 +98,7 @@ fn parse_board(input: StringInput) -> Result<Board> {
               position: Position { x, y },
             },
           );
-          row.push(Square::Goblin);
+          map.push(Square::Goblin(id));
         }
         _ => {
           return Err(Box::new(InvalidLine(line.to_string())));
@@ -123,22 +106,23 @@ fn parse_board(input: StringInput) -> Result<Board> {
       }
       x += 1;
     }
-    board.push(row);
+    // not all rows are guaranteed to be the same length
+    while x < width {
+      x += 1;
+      map.push(Square::Wall);
+    }
     y += 1;
   }
 
-  Ok(Board {
-    board,
-    units,
-  })
+  Ok(Board::new(map, width, units))
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 enum Square {
   Wall,
   Open,
-  Elf,
-  Goblin,
+  Elf(UnitId),
+  Goblin(UnitId),
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash)]
@@ -191,7 +175,8 @@ impl Ord for Unit {
     other
         .turns
         .cmp(&self.turns)
-        .then(self.position.cmp(&other.position))
+        .then_with(|| other.position.y.cmp(&self.position.y))
+        .then_with(|| other.position.x.cmp(&self.position.x))
   }
 }
 
@@ -202,12 +187,6 @@ enum UnitType {
 }
 
 impl UnitType {
-  fn square(&self) -> Square {
-    match self {
-      UnitType::Elf => Square::Elf,
-      UnitType::Goblin => Square::Goblin,
-    }
-  }
   fn other(&self) -> UnitType {
     match self {
       UnitType::Elf => UnitType::Goblin,
@@ -216,87 +195,139 @@ impl UnitType {
   }
 }
 
+#[derive(Hash, PartialEq, Eq, Debug, Copy)]
+struct UnitId(usize);
+
 struct Board {
-  board: Vec<Vec<Square>>,
-  units: HashMap<Position, Unit>,
+  map: Vec<Square>,
+  width: usize,
+  completed_rounds: usize,
+  units: HashMap<UnitId, Unit>,
+  current_round: Round,
 }
 
+struct Round {
+  unit_order: VecDeque<UnitId>
+}
+
+
 impl Board {
+  fn new(map: Vec<Square>, width: usize, units: HashMap<UnitId, Unit>) -> Board {
+    let mut unit_order = Board::get_unit_order(&map);
+    Board {
+      map,
+      width,
+      units,
+      completed_rounds: 0,
+      current_round: Round { unit_order },
+    }
+  }
+  fn get_unit_order(map: &Vec<Square>) -> VecDequeu<UnitId> {
+    map.iter().flat_map(|s| match s {
+      Square::Elf(id) => Some(*id),
+      Square::Goblin(id) => Some(*id),
+      _ => None
+    })
+  }
   fn print(&self) {
-    let mut output = Vec::with_capacity(self.board.iter().map(|v| v.len() + 1).sum());
-    let mut y = 0;
-    for v in &self.board {
-      let mut x = 0;
-      for s in v {
-        match s {
-          Square::Wall => output.push('#' as u8),
-          Square::Open => output.push('.' as u8),
-          Square::Elf => output.push('E' as u8),
-          Square::Goblin => output.push('G' as u8),
+    let mut output = Vec::with_capacity(self.map.len() + self.width);
+    let mut i = 0;
+
+    let mut health = vec![];
+
+    for s in &self.map {
+      match s {
+        Square::Wall => output.push('#' as u8),
+        Square::Open => output.push('.' as u8),
+        Square::Elf(id) => {
+          let u = self.units.get(&id).unwrap();
+          health.push((u.turns, u.hit_points));
+          if u.turns == self.completed_turns {
+            output.push('e' as u8);
+          } else {
+            output.push('E' as u8);
+          }
         }
-        x += 1;
+        Square::Goblin(id) => {
+          let u = self.units.get(&id).unwrap();
+          health.push((u.turns, u.hit_points));
+          if u.turns == self.completed_turns {
+            output.push('g' as u8);
+          } else {
+            output.push('G' as u8);
+          }
+        }
       }
-      output.push('\n' as u8);
-      y += 1;
+      i += 1;
+      if i % self.width == 0 {
+        let hitpoints = format!(" {:?}", health);
+        health.clear();
+        output.append(&mut hitpoints.into_bytes());
+        output.push('\n' as u8);
+      }
     }
     stdout().write(&output);
   }
 
   fn get(&self, x: usize, y: usize) -> Square {
-    if y < self.board.len() {
-      let v = &self.board[y];
-      if x < v.len() {
-        return v[x];
+    if x < self.width {
+      let i = x + self.width * y;
+      if i < self.map.len() {
+        return self.map[i];
       }
     }
     Square::Wall
   }
 
   fn set(&mut self, x: usize, y: usize, square: Square) {
-    if y < self.board.len() {
-      let mut v = &mut self.board[y];
-      if x < v.len() {
-        v[x] = square;
+    if x < self.width {
+      let i = x + self.width * y;
+      if i < self.map.len() {
+        self.map[i] = square;
+        return;
       }
     }
   }
 
   fn step(&mut self) -> GameStatus {
+    let Some()
+
     let mut opt_current = {
       let k = self
           .units
           .iter()
-          .max_by(|(k, v), (k1, v1)| v1.turns.cmp(&v.turns).then(k.cmp(k1)))
+          .max_by_key(|(k, v)| *v)
           .map(|(k, v)| k.clone());
       k.and_then(|k| self.units.remove(&k))
     };
     if let Some(mut current_unit) = opt_current {
+      self.completed_turns = current_unit.turns;
       let enemy_tpe = current_unit.tpe.other().square();
-      if self.units
-          .values()
-          .filter(|u| u.tpe != current_unit.tpe)
-          .count() == 0 {
-        self.units.insert(current_unit.position, current_unit);
-        return GameStatus::Over;
-      }
+
       if !self
           .surrounding_squares(current_unit.position)
           .into_iter()
           .any(|p| self.get(p.x, p.y) == enemy_tpe) {
-        let goals = self
-            .units
-            .iter()
-            .flat_map(|(_, unit)| {
-              if unit.tpe != current_unit.tpe {
-                self.open_surrounding_squares(unit.position)
-              } else {
-                vec![]
-              }
-            })
-            .collect();
-        //        println!("goals: {:?}", goals);
-        if let Some(path) = self.find_shortest_path_to(current_unit.position, goals) {
-          //          println!("path: {:?}", path);
+        let goal_paths: Vec<_> = {
+          let targets = self.units.values().filter(|u| u.tpe != current_unit.tpe).map(|u| u.position).collect::<Vec<_>>();
+          if targets.len() == 0 {
+            self.units.insert(current_unit.position, current_unit);
+            return GameStatus::Over;
+          }
+          targets.into_iter().flat_map(|p| {
+            self.open_surrounding_squares(p)
+          })
+              .flat_map(|goal| {
+                self.find_shortest_path_to(current_unit.position, goal)
+                    .map(|path| (goal, path))
+              })
+              .collect()
+        };
+
+        if let Some((_, path)) = goal_paths.iter().min_by(|(lg, lp), (rg, rp)| {
+          lp.len().cmp(&rp.len())
+              .then_with(|| rg.cmp(lg))
+        }) {
           if path.len() > 0 {
             let next = path[0];
             self.set(
@@ -316,16 +347,13 @@ impl Board {
           .filter(|p| self.get(p.x, p.y) == enemy_tpe)
           .collect();
       if targets.len() > 0 {
-        let mut min_health = usize::max_value();
-        let mut pos = Position { x: 0, y: 0 };
-        for tp in targets {
-          if let Some(target) = self.units.get(&tp) {
-            if target.hit_points < min_health {
-              min_health = target.hit_points;
-              pos = tp;
-            }
-          }
-        }
+        let (pos, min_health) = targets.into_iter()
+            .map(|p| (p, self.units.get(&p).unwrap().hit_points))
+            .min_by(|(lp, lh), (rp, rh)| {
+              lh.cmp(rh)
+                  .then_with(|| rp.cmp(lp))
+            })
+            .unwrap();
         if min_health <= current_unit.attack_power {
           // target unit is dead
           let target = self.units.remove(&pos).unwrap();
@@ -342,7 +370,7 @@ impl Board {
     GameStatus::Continue
   }
 
-  fn find_shortest_path_to(
+  fn find_shortest_path_to_multiple(
     &self,
     start: Position,
     goals: HashSet<Position>,
@@ -354,6 +382,31 @@ impl Board {
 
     while let Some((dist, next, path)) = queue.pop() {
       if goals.contains(&next) {
+        return Some(path);
+      }
+      for next_move in self.open_surrounding_squares(next) {
+        if considered.insert(next_move) {
+          let mut path = path.clone();
+          path.push(next_move);
+          queue.push((dist - 1, next_move, path));
+        }
+      }
+    }
+
+    None
+  }
+  fn find_shortest_path_to(
+    &self,
+    start: Position,
+    target: Position,
+  ) -> Option<Vec<Position>> {
+    let mut queue = BinaryHeap::new();
+    let mut considered = HashSet::new();
+    queue.push((0, start, vec![]));
+    considered.insert(start);
+
+    while let Some((dist, next, path)) = queue.pop() {
+      if target == next {
         return Some(path);
       }
       for next_move in self.open_surrounding_squares(next) {
