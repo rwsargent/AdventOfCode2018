@@ -2,25 +2,37 @@ use std::{thread, time};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::fmt;
-use std::io::{Read, stdin, stdout, Write};
+use std::io::{BufRead, stdin, stdout, Write};
 
 use utils::*;
 
 pub fn do_battle(input: StringInput) -> PuzzleResult {
   let mut board = parse_board(input)?;
   board.print();
-  let mut buf = [0];
-  while let Ok(_) = stdin().read_exact(&mut buf) {
-    match buf[0] {
-      b'q' => {
+  let mut buf = String::new();
+  let stdin = stdin();
+  for line in stdin.lock().lines() {
+    let line = line.unwrap();
+    match &line[..] {
+      "q" => {
         return Ok(PuzzleSolution::unit);
       }
-      b'f' => break,
-      b'\n' => {
+      "f" => break,
+      "" => {
         board.step();
         board.print();
       }
-      _ => {}
+      x => {
+        match x.parse::<usize>() {
+          Ok(steps) => {
+            for _ in 0..steps {
+              board.step();
+              board.print();
+            }
+          }
+          _ => ()
+        }
+      }
     }
   }
   let mut game_status = GameStatus::Continue;
@@ -32,9 +44,9 @@ pub fn do_battle(input: StringInput) -> PuzzleResult {
 
   let mut leftover_hitpoints: usize = board.units.values().map(|u| u.hit_points).sum();
   Ok(PuzzleSolution::Triplet(
-    board.completed_turns,
+    board.completed_rounds,
     leftover_hitpoints,
-    board.completed_turns * leftover_hitpoints,
+    board.completed_rounds * leftover_hitpoints,
   ))
 }
 
@@ -49,9 +61,9 @@ pub fn battle_outcome(input: StringInput) -> PuzzleResult {
 
   let mut leftover_hitpoints: usize = board.units.values().map(|u| u.hit_points).sum();
   Ok(PuzzleSolution::Triplet(
-    board.completed_turns,
+    board.completed_rounds,
     leftover_hitpoints,
-    board.completed_turns * leftover_hitpoints,
+    board.completed_rounds * leftover_hitpoints,
   ))
 }
 
@@ -77,8 +89,8 @@ fn parse_board(input: StringInput) -> Result<Board> {
           units.insert(
             id,
             Unit {
+              id,
               tpe: UnitType::Elf,
-              turns: 0,
               hit_points: 200,
               attack_power: 3,
               position: Position { x, y },
@@ -91,8 +103,8 @@ fn parse_board(input: StringInput) -> Result<Board> {
           units.insert(
             id,
             Unit {
+              id,
               tpe: UnitType::Goblin,
-              turns: 0,
               hit_points: 200,
               attack_power: 3,
               position: Position { x, y },
@@ -149,6 +161,9 @@ impl PartialOrd for Position {
   }
 }
 
+// We implement Ord for Position so that we can use a the std BinaryHeap which is max heap.
+// We want the heap to return the Position that is first in 'reading order'.
+// Position is x to the right, y down. Reading order is lowest y first, otherwise lowest x.
 impl Ord for Position {
   fn cmp(&self, other: &Self) -> Ordering {
     other.y.cmp(&self.y).then(other.x.cmp(&self.x))
@@ -157,26 +172,35 @@ impl Ord for Position {
 
 #[derive(PartialEq, Eq, Debug)]
 struct Unit {
+  id: UnitId,
   tpe: UnitType,
-  turns: usize,
   hit_points: usize,
   attack_power: usize,
   position: Position,
 }
 
-impl PartialOrd for Unit {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(other))
+impl Unit {
+  fn is_enemy(&self, square: Square) -> bool {
+    match self.tpe {
+      UnitType::Elf => {
+        match square {
+          Square::Goblin(_) => true,
+          _ => false,
+        }
+      }
+      UnitType::Goblin => {
+        match square {
+          Square::Elf(_) => true,
+          _ => false,
+        }
+      }
+    }
   }
-}
-
-impl Ord for Unit {
-  fn cmp(&self, other: &Self) -> Ordering {
-    other
-        .turns
-        .cmp(&self.turns)
-        .then_with(|| other.position.y.cmp(&self.position.y))
-        .then_with(|| other.position.x.cmp(&self.position.x))
+  fn square(&self) -> Square {
+    match self.tpe {
+      UnitType::Elf => Square::Elf(self.id),
+      UnitType::Goblin => Square::Goblin(self.id),
+    }
   }
 }
 
@@ -195,7 +219,7 @@ impl UnitType {
   }
 }
 
-#[derive(Hash, PartialEq, Eq, Debug, Copy)]
+#[derive(Hash, PartialEq, Eq, Debug, Copy, Clone)]
 struct UnitId(usize);
 
 struct Board {
@@ -203,7 +227,7 @@ struct Board {
   width: usize,
   completed_rounds: usize,
   units: HashMap<UnitId, Unit>,
-  current_round: Round,
+  round: Round,
 }
 
 struct Round {
@@ -213,21 +237,25 @@ struct Round {
 
 impl Board {
   fn new(map: Vec<Square>, width: usize, units: HashMap<UnitId, Unit>) -> Board {
-    let mut unit_order = Board::get_unit_order(&map);
+    let mut round = Board::get_fresh_round(&map);
     Board {
       map,
       width,
       units,
       completed_rounds: 0,
-      current_round: Round { unit_order },
+      round,
     }
   }
-  fn get_unit_order(map: &Vec<Square>) -> VecDequeu<UnitId> {
-    map.iter().flat_map(|s| match s {
-      Square::Elf(id) => Some(*id),
-      Square::Goblin(id) => Some(*id),
-      _ => None
-    })
+  fn get_fresh_round(map: &Vec<Square>) -> Round {
+    Round {
+      unit_order: map.iter()
+          .flat_map(|s| match s {
+            Square::Elf(id) => Some(*id),
+            Square::Goblin(id) => Some(*id),
+            _ => None
+          })
+          .collect()
+    }
   }
   fn print(&self) {
     let mut output = Vec::with_capacity(self.map.len() + self.width);
@@ -241,21 +269,13 @@ impl Board {
         Square::Open => output.push('.' as u8),
         Square::Elf(id) => {
           let u = self.units.get(&id).unwrap();
-          health.push((u.turns, u.hit_points));
-          if u.turns == self.completed_turns {
-            output.push('e' as u8);
-          } else {
-            output.push('E' as u8);
-          }
+          health.push(u.hit_points);
+          output.push('E' as u8);
         }
         Square::Goblin(id) => {
           let u = self.units.get(&id).unwrap();
-          health.push((u.turns, u.hit_points));
-          if u.turns == self.completed_turns {
-            output.push('g' as u8);
-          } else {
-            output.push('G' as u8);
-          }
+          health.push(u.hit_points);
+          output.push('G' as u8);
         }
       }
       i += 1;
@@ -279,9 +299,9 @@ impl Board {
     Square::Wall
   }
 
-  fn set(&mut self, x: usize, y: usize, square: Square) {
-    if x < self.width {
-      let i = x + self.width * y;
+  fn set(&mut self, pos: Position, square: Square) {
+    if pos.x < self.width {
+      let i = pos.x + self.width * pos.y;
       if i < self.map.len() {
         self.map[i] = square;
         return;
@@ -290,99 +310,137 @@ impl Board {
   }
 
   fn step(&mut self) -> GameStatus {
-    let Some()
+    if let Some(id) = self.round.unit_order.pop_front() {
+      // ** Combat proceeds in rounds; in each round, each unit that is still alive takes a turn,
+      // ** resolving all of its actions before the next unit's turn begins. On each unit's turn,
+      // ** it tries to move into range of an enemy (if it isn't already) and then attack (if it is in range).
+      if let Some(mut current_unit) = self.units.remove(&id) {
 
-    let mut opt_current = {
-      let k = self
-          .units
-          .iter()
-          .max_by_key(|(k, v)| *v)
-          .map(|(k, v)| k.clone());
-      k.and_then(|k| self.units.remove(&k))
-    };
-    if let Some(mut current_unit) = opt_current {
-      self.completed_turns = current_unit.turns;
-      let enemy_tpe = current_unit.tpe.other().square();
+        // ** Each unit begins its turn by identifying all possible targets (enemy units).
+        // ** If no targets remain, combat ends.
+        let target_units: Vec<_> = self.units.values()
+            .filter(|u| u.tpe != current_unit.tpe)
+            .map(|u| u.id)
+            .collect();
+        if target_units.len() == 0 {
+          // to leave the board as it was found.
+          self.units.insert(id, current_unit);
+          return GameStatus::Over;
+        }
+        // ** Perform actions: Move and Attack
 
-      if !self
-          .surrounding_squares(current_unit.position)
-          .into_iter()
-          .any(|p| self.get(p.x, p.y) == enemy_tpe) {
-        let goal_paths: Vec<_> = {
-          let targets = self.units.values().filter(|u| u.tpe != current_unit.tpe).map(|u| u.position).collect::<Vec<_>>();
-          if targets.len() == 0 {
-            self.units.insert(current_unit.position, current_unit);
-            return GameStatus::Over;
-          }
-          targets.into_iter().flat_map(|p| {
-            self.open_surrounding_squares(p)
-          })
-              .flat_map(|goal| {
-                self.find_shortest_path_to(current_unit.position, goal)
-                    .map(|path| (goal, path))
-              })
-              .collect()
-        };
-
-        if let Some((_, path)) = goal_paths.iter().min_by(|(lg, lp), (rg, rp)| {
-          lp.len().cmp(&rp.len())
-              .then_with(|| rg.cmp(lg))
-        }) {
-          if path.len() > 0 {
+        // ** If the unit is already in range of a target, it does not move, but continues its turn
+        // ** with an attack. Otherwise, since it is not in range of a target, it moves.
+        if !self.surrounding_squares(current_unit.position)
+            .into_iter()
+            .any(|p| current_unit.is_enemy(self.get(p.x, p.y))) {
+          // The unit should try to move
+          // ** To move, the unit first considers the squares that are in range and determines which
+          // ** of those squares it could reach in the fewest steps. A step is a single movement to
+          // ** any adjacent (immediately up, down, left, or right) open (.) square. Units cannot move
+          // ** into walls or other units. The unit does this while considering the current positions
+          // ** of units and does not do any prediction about where units will be later. If the unit
+          // ** cannot reach (find an open path to) any of the squares that are in range, it ends its
+          // ** turn. If multiple squares are in range and tied for being reachable in the fewest steps,
+          // ** the square which is first in reading order is chosen.
+          // **
+          // ** Then, the unit identifies all of the open squares (.) that are in range of each target;
+          // ** these are the squares which are adjacent (immediately up, down, left, or right) to any
+          // ** target and which aren't already occupied by a wall or another unit. Alternatively, the
+          // ** unit might already be in range of a target. If the unit is not already in range of a
+          // ** target, and there are no open squares which are in range of a target, the unit ends its turn.
+          let target_positions = target_units.iter().flat_map(|uid| {
+            self.open_surrounding_squares(self.units.get(uid).unwrap().position)
+          }).collect();
+          if let Some(path) = self.find_best_path(current_unit.position, target_positions) {
             let next = path[0];
             self.set(
-              current_unit.position.x,
-              current_unit.position.y,
+              current_unit.position,
               Square::Open,
             );
-            self.set(next.x, next.y, current_unit.tpe.square());
+            self.set(next, current_unit.square());
             current_unit.position = next;
           }
         }
-      }
-      // after moving, if we can attack, do it.
-      let targets: Vec<_> = self
-          .surrounding_squares(current_unit.position)
-          .into_iter()
-          .filter(|p| self.get(p.x, p.y) == enemy_tpe)
-          .collect();
-      if targets.len() > 0 {
-        let (pos, min_health) = targets.into_iter()
-            .map(|p| (p, self.units.get(&p).unwrap().hit_points))
-            .min_by(|(lp, lh), (rp, rh)| {
+        // ** After moving (or if the unit began its turn in range of a target), the unit attacks.
+
+        // Now the unit should try to attack.
+        // ** To attack, the unit first determines all of the targets that are in range of it by being
+        // ** immediately adjacent to it. If there are no such targets, the unit ends its turn. Otherwise,
+        // ** the adjacent target with the fewest hit points is selected; in a tie, the adjacent target
+        // ** with the fewest hit points which is first in reading order is selected.
+        if let Some((id, _, min_health)) = self
+            .surrounding_squares(current_unit.position)
+            .into_iter()
+            .map(|p| self.get(p.x, p.y))
+            .filter(|s| current_unit.is_enemy(*s))
+            .map(|s| match s {
+              Square::Elf(id) => {
+                let u = self.units.get(&id).unwrap();
+                (u.id, u.position, u.hit_points)
+              }
+              Square::Goblin(id) => {
+                let u = self.units.get(&id).unwrap();
+                (u.id, u.position, u.hit_points)
+              }
+              _ => unreachable!()
+            })
+            .min_by(|(_, lp, lh), (_, rp, rh)| {
               lh.cmp(rh)
                   .then_with(|| rp.cmp(lp))
-            })
-            .unwrap();
-        if min_health <= current_unit.attack_power {
-          // target unit is dead
-          let target = self.units.remove(&pos).unwrap();
-          self.set(target.position.x, target.position.y, Square::Open);
-        } else {
-          let mut target = self.units.get_mut(&pos).unwrap();
-          target.hit_points -= current_unit.attack_power;
+            }) {
+          // ** The unit deals damage equal to its attack power to the selected target, reducing its hit
+          // ** points by that amount. If this reduces its hit points to 0 or fewer, the selected target
+          // ** dies: its square becomes . and it takes no further turns.
+          if min_health <= current_unit.attack_power {
+            // target unit is dead
+            let target = self.units.remove(&id).unwrap();
+            self.round.unit_order.retain(|uid| *uid != id);
+            self.set(target.position, Square::Open);
+          } else {
+            let mut target = self.units.get_mut(&id).unwrap();
+            target.hit_points -= current_unit.attack_power;
+          }
         }
+        self.units.insert(id, current_unit);
       }
-      current_unit.turns += 1;
-      self.units.insert(current_unit.position, current_unit);
+    }
+
+    if self.round.unit_order.len() == 0 {
+      // start a new round
+      self.round = Board::get_fresh_round(&self.map);
+      self.completed_rounds += 1;
     }
 
     GameStatus::Continue
   }
 
-  fn find_shortest_path_to_multiple(
+  fn find_best_path(
     &self,
     start: Position,
     goals: HashSet<Position>,
   ) -> Option<Vec<Position>> {
+    // this is a max heap
     let mut queue = BinaryHeap::new();
     let mut considered = HashSet::new();
     queue.push((0, start, vec![]));
     considered.insert(start);
 
+    let mut results: Vec<Vec<Position>> = vec![];
+    let mut best_distance = 0;
+
     while let Some((dist, next, path)) = queue.pop() {
+      // if we have found valid paths, but we are now only considering paths > the best distance
+      // break.
+      if best_distance != 0 && path.len() > best_distance {
+        break;
+      }
       if goals.contains(&next) {
-        return Some(path);
+        if best_distance == 0 || best_distance == path.len() {
+          best_distance = path.len();
+          results.push(path);
+          continue;
+        }
       }
       for next_move in self.open_surrounding_squares(next) {
         if considered.insert(next_move) {
@@ -392,33 +450,18 @@ impl Board {
         }
       }
     }
+    if results.len() > 1 {
+      // return the best path
 
-    None
-  }
-  fn find_shortest_path_to(
-    &self,
-    start: Position,
-    target: Position,
-  ) -> Option<Vec<Position>> {
-    let mut queue = BinaryHeap::new();
-    let mut considered = HashSet::new();
-    queue.push((0, start, vec![]));
-    considered.insert(start);
-
-    while let Some((dist, next, path)) = queue.pop() {
-      if target == next {
-        return Some(path);
-      }
-      for next_move in self.open_surrounding_squares(next) {
-        if considered.insert(next_move) {
-          let mut path = path.clone();
-          path.push(next_move);
-          queue.push((dist - 1, next_move, path));
-        }
-      }
+      println!("choosing from paths: {:?}", results);
+      let r = results.into_iter().max_by(|l, r| {
+        l.last().unwrap().cmp(r.last().unwrap())
+            .then_with(|| l.first().unwrap().cmp(r.first().unwrap()))
+      });
+      println!("best: {:?}", r);
+      return r;
     }
-
-    None
+    results.pop()
   }
   fn surrounding_squares(&self, start: Position) -> Vec<Position> {
     let mut result = vec![
