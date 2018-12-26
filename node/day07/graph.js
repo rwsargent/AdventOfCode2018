@@ -79,4 +79,70 @@ Graph.prototype.kahnOrder = function() {
     return order
 }
 
+Graph.prototype.executionTime = function() {
+    let order = [] 
+    let nodes = this.nodes.sort() 
+    let edges = this.edges 
+    let parents = nodes.filter(function(node) {
+        return !edges[node].length 
+    }).sort()
+
+    let time = 0
+    let taskTime = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+    let workers = new Array(5).fill(null).map(function(v) {
+        return {
+            node: undefined,
+            time: 0
+        }
+    })
+
+    while(parents.length || workers.filter(w => w.node != undefined).length) {
+        let processing = workers.filter(function(worker) {
+            return worker.node
+        }).map(function(worker) {
+            return worker.node
+        })
+
+        // assign any free workers 
+        workers = workers.map(function(worker) {
+            if(worker.time > time) return worker 
+            if(worker.node == undefined) return worker
+
+            let next = worker.node
+            order.push(next)
+            delete(edges[next])
+            for(let node in edges) {
+                // remove edges that used next node
+                edges[node] = edges[node].filter(function(edge) {
+                    return edge != next 
+                })
+                // if this node is now a parent add it to the parent list 
+                if(!edges[node].length 
+                    && !parents.includes(node) 
+                    && !processing.includes(node)
+                ) parents.push(node)
+            } 
+            parents.sort() 
+
+            worker.node = undefined
+            worker.time = 0
+
+            return worker
+        })
+
+        workers = workers.map(function(worker) {
+            if(worker.node != undefined) return worker 
+
+            worker.node = parents.shift()
+            worker.time = time + taskTime.indexOf(worker.node) + 60
+
+            return worker
+        })
+
+        time++
+    }
+
+    return --time
+}
+
 module.exports = Graph
