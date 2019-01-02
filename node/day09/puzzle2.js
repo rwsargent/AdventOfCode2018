@@ -27,13 +27,21 @@ LinkedList.prototype.append = function(value) {
     return this
 }
 
-LinkedList.prototype.next = function() {
-    this.current = this.current.next
+LinkedList.prototype.next = function(steps) {
+    steps = steps || 1
+    while(steps > 0) {
+        this.current = this.current.next
+        steps--
+    }
     return this
 }
 
-LinkedList.prototype.prev = function() {
-    this.current = this.current.prev
+LinkedList.prototype.prev = function(steps) {
+    steps = steps || 1
+    while(steps > 0) {
+        this.current = this.current.prev
+        steps--
+    }
     return this
 }
 
@@ -55,7 +63,7 @@ for(let round = 1; round <= rounds; round++) {
         marbles.append(round)
     } else {
         let player = round % players
-        let marble = marbles.prev().prev().prev().prev().prev().prev().prev().current.value
+        let marble = marbles.prev(7).current.value
         marbles.remove()
         scores[player] += round + marble
     }
