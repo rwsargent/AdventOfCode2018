@@ -1,8 +1,10 @@
 let start = new Date().getTime()
-let players = 418 
-let rounds = 71339 * 100
+// let players = 418 
+// let rounds = 71339
+let players = 9
+let rounds = 69
 
-let scores = new Array(players).fill(null).map(s => BigInt(0))
+let scores = new Array(players).fill(null).map(s => 0)
 let marbles = [0]
 let current = 0
 
@@ -17,12 +19,15 @@ for(let round = 1; round <= rounds; round++) {
         let player = round % players
         let index = (current - 7) 
         if(index < 0) index += marbles.length
-        scores[player] += BigInt(round + marbles[index])
+        scores[player] += round + marbles[index]
         marbles.splice(index, 1)
         current = index
     }
-    update(round)
+    // update(round)
 }
+
+console.log(marbles.join(' '))
+return
 
 // console.log(scores)
 // console.log(Math.max(...scores))
@@ -31,7 +36,7 @@ for(let round = 1; round <= rounds; round++) {
 // }, 0)
 let max = scores.reduce(function(max, score) {
     return (max > score) ? max : score
-}, BigInt(0))
+}, 0)
 console.log(max)
 
 let end = new Date().getTime() 
@@ -40,7 +45,7 @@ console.log('milliseconds:', end - start)
 function update(round) {
     let execution_time =new Date().getTime() - start  
     let percent= round / rounds * 100
-    let message = ""
+    let message = "\n"
     message += "round: " + round 
     message += "\n"
     message += "percent: " + Math.round(percent)
@@ -49,6 +54,7 @@ function update(round) {
     message += "\n"
     message += "estimated finish: " + Math.round(100 / percent * execution_time / 1000)
     message += "\n"
+    
     process.stdout.moveCursor(0, -4);
     process.stdout.clearScreenDown();
     process.stdout.write(message);
