@@ -29,6 +29,9 @@ function getMaxBounds(data) {
         if(y < min[1]) min[1] = y
     }
 
+    min = min.map(m => m++) 
+    max = max.map(m => m++) 
+
     return [].concat(min, max)
 }
 
@@ -69,13 +72,31 @@ while(size < old_size) {
     data = forwardOneTick(data)
     size = getSize(data)
     tick++
-    console.log(size, tick)
+    // console.log(size, tick)
 }
 data = backwardOneTick(data)
 tick--
 size = getSize(data)
 
-console.log(size, tick)
 
 bounds = getMaxBounds(data)
-console.log(bounds)
+
+let points = data.map(function(set) {
+    return set.position
+})
+
+let x = new Array(bounds[2] + 1).fill(null).map(v => ' ')
+let y = new Array(bounds[3] + 1).fill(null).map(v => x.slice())
+
+let printable = y.map(function(x, y) {
+    return x.map(function(c, x) {
+        let hash = points.filter(function(point) {
+            let hash = point[0] == x && point[1] == y
+            return hash
+        }).length
+        return (hash) ? '#' : c
+    }).join('')
+}).join('\n')
+
+console.log(printable)
+console.log(size, tick)
